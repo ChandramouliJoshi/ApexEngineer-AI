@@ -1,0 +1,32 @@
+# Virtual Environment
+f1ven/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# FastF1 Cache
+cache/
+
+# Data
+data/processed/
+data/exports/
+
+# Test
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/
