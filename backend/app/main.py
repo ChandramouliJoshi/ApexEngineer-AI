@@ -3,31 +3,33 @@ from fastapi import FastAPI
 from app.services.fastf1_service import FastF1Service
 
 app = FastAPI(
-    title="ApexEngineer AI"
+    title="ApexEngineer AI",
+    version="1.0.0"
 )
 
-service = FastF1Service()
+fastf1_service = FastF1Service()
 
 
 @app.get("/")
 def root():
     return {
-        "message": "ApexEngineer AI Backend"
+        "project": "ApexEngineer AI",
+        "status": "Running"
     }
 
 
 @app.get("/session")
-def load_session():
+def get_session():
 
-    session = service.get_session(
-        2025,
-        "Monaco",
-        "R"
+    session = fastf1_service.load_session(
+        year=2025,
+        grand_prix="Monaco",
+        session_type="R"
     )
 
     return {
         "event": session.event.EventName,
-        "year": session.event.EventDate.year,
+        "country": session.event.Country,
         "drivers": len(session.drivers),
         "laps": len(session.laps)
     }

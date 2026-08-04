@@ -2,22 +2,18 @@ import fastf1
 
 from app.core.config import CACHE_DIR
 
-# Enable local cache
-fastf1.Cache.enable_cache(CACHE_DIR)
-
 
 class FastF1Service:
 
-    def get_session(self, year: int, grand_prix: str, session_type: str = "R"):
-        """
-        Load an F1 session.
+    def __init__(self):
+        fastf1.Cache.enable_cache(str(CACHE_DIR))
 
-        Example:
-        year = 2025
-        grand_prix = "Monaco"
-        session_type = "R"
-        """
-
+    def load_session(
+        self,
+        year: int,
+        grand_prix: str,
+        session_type: str = "R"
+    ):
         session = fastf1.get_session(
             year,
             grand_prix,
