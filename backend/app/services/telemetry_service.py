@@ -1,9 +1,9 @@
-from app.services.session_service import SessionService
+from app.services.lap_service import LapService
 
 
 class TelemetryService:
     def __init__(self):
-        self.session_service = SessionService()
+        self.lap_service = LapService()
 
     def get_fastest_lap(
         self,
@@ -16,17 +16,12 @@ class TelemetryService:
         Returns the fastest lap for the given driver.
         """
 
-        session = self.session_service.get_session(
+        return self.lap_service.get_fastest_lap(
             year,
             grand_prix,
+            driver,
             session_type
         )
-
-        driver_laps = session.laps.pick_drivers(driver)
-
-        fastest_lap = driver_laps.pick_fastest()
-
-        return fastest_lap
 
     def get_telemetry(
         self,
@@ -46,6 +41,22 @@ class TelemetryService:
             session_type
         )
 
-        telemetry = fastest_lap.get_car_data().add_distance()
+        return fastest_lap.get_car_data().add_distance()
 
-        return telemetry
+    def get_telemetry_from_session(
+        self,
+        session,
+        driver: str
+    ):
+        """
+        Returns telemetry for a driver's fastest lap from an
+        already loaded session.
+        """
+
+        fastest_lap = (
+            session.laps
+            .pick_drivers(driver)
+            .pick_fastest()
+        )
+
+        return fastest_lap.get_car_data().add_distance()
