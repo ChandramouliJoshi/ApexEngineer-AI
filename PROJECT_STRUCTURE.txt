@@ -1,0 +1,66 @@
+ApexEngineer-AI/
+├── docker-compose.yml
+├── pyproject.toml
+├── README.md
+├── requirements.txt
+├── backend/
+│   └── app/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── test_car_data.py
+│       ├── test_session.py
+│       ├── test_telemetry.py
+│       ├── analytics/
+│       │   ├── __init__.py
+│       │   ├── corners.py
+│       │   ├── delta.py
+│       │   ├── sectors.py
+│       │   ├── telemetry_analysis.py
+│       │   ├── tyres.py
+│       │   └── weather.py
+│       ├── api/
+│       │   ├── __init__.py
+│       │   ├── analysis.py
+│       │   ├── drivers.py
+│       │   ├── laps.py
+│       │   ├── sessions.py
+│       │   └── telemetry.py
+│       ├── core/
+│       │   ├── __init__.py
+│       │   ├── cache.py
+│       │   ├── config.py
+│       │   ├── constants.py
+│       │   └── logging.py
+│       ├── database/
+│       │   ├── __init__.py
+│       │   ├── database.py
+│       │   ├── models.py
+│       │   └── schemas.py
+│       ├── ml/
+│       │   ├── __init__.py
+│       │   ├── driver_scoring.py
+│       │   ├── recommendation.py
+│       │   └── models/
+│       ├── services/
+│       │   ├── __init__.py
+│       │   ├── ai_engineer.py
+│       │   ├── comparision_service.py
+│       │   ├── fastf1_service.py
+│       │   ├── lap_service.py
+│       │   ├── session_service.py
+│       │   └── telemetry_service.py
+│       └── utils/
+│           ├── calculations.py
+│           ├── helpers.py
+│           └── validators.py
+├── cache/
+│   └── 2025/
+│       └── 2025-05-25_Monaco_Grand_Prix/
+└── data/
+
+Additional environment folders:
+├── f1ven/
+│   ├── pyvenv.cfg
+│   ├── Include/
+│   ├── Lib/
+│   └── Scripts/

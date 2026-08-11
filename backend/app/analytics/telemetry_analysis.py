@@ -7,40 +7,56 @@ class TelemetryAnalysis(BaseAnalysis):
     """
 
     def get_max_speed(self):
-        return float(self.telemetry["Speed"].max())
+        return round(float(self.telemetry["Speed"].max()), 2)
 
     def get_average_speed(self):
-        return float(self.telemetry["Speed"].mean())
+        return round(float(self.telemetry["Speed"].mean()), 2)
 
     def get_min_speed(self):
-        return float(self.telemetry["Speed"].min())
+        return round(float(self.telemetry["Speed"].min()), 2)
 
     def get_max_rpm(self):
-        return float(self.telemetry["RPM"].max())
+        return round(float(self.telemetry["RPM"].max()), 2)
 
     def get_average_rpm(self):
-        return float(self.telemetry["RPM"].mean())
+        return round(float(self.telemetry["RPM"].mean()), 2)
 
     def get_average_gear(self):
-        return float(self.telemetry["nGear"].mean())
+        return round(float(self.telemetry["nGear"].mean()), 2)
 
     def get_max_gear(self):
         return int(self.telemetry["nGear"].max())
 
     def get_total_distance(self):
-        return float(self.telemetry["Distance"].max())
+        return round(float(self.telemetry["Distance"].max()), 2)
 
     def get_full_throttle_percentage(self):
-        full_throttle = (self.telemetry["Throttle"] == 100).sum()
-        return (full_throttle / len(self.telemetry)) * 100
+        full_throttle = (
+            self.telemetry["Throttle"] == 100
+        ).sum()
+
+        return round(
+            (full_throttle / len(self.telemetry)) * 100,
+            2
+        )
 
     def get_brake_percentage(self):
         braking = self.telemetry["Brake"].sum()
-        return (braking / len(self.telemetry)) * 100
+
+        return round(
+            (braking / len(self.telemetry)) * 100,
+            2
+        )
 
     def get_drs_usage(self):
-        drs_active = (self.telemetry["DRS"] > 0).sum()
-        return (drs_active / len(self.telemetry)) * 100
+        drs_active = (
+            self.telemetry["DRS"] > 0
+        ).sum()
+
+        return round(
+            (drs_active / len(self.telemetry)) * 100,
+            2
+        )
 
     def get_summary(self):
         """
