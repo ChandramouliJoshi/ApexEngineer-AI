@@ -1,10 +1,9 @@
-from pprint import pprint
-
 from app.services.telemetry_service import TelemetryService
 from app.analytics.telemetry_analysis import TelemetryAnalysis
 
 
-def main():
+def test_telemetry_analysis():
+
     telemetry_service = TelemetryService()
 
     telemetry = telemetry_service.get_telemetry(
@@ -13,10 +12,30 @@ def main():
         driver="VER"
     )
 
-    analysis = TelemetryAnalysis(telemetry)
+    analysis = TelemetryAnalysis(
+        telemetry
+    )
 
-    pprint(analysis.get_summary())
+    summary = analysis.get_summary()
 
+    assert summary is not None
 
-if __name__ == "__main__":
-    main()
+    assert "speed" in summary
+    assert "rpm" in summary
+    assert "gear" in summary
+    assert "distance" in summary
+    assert "full_throttle" in summary
+    assert "brake_usage" in summary
+    assert "drs_usage" in summary
+
+    assert summary["speed"]["max"] > 0
+    assert summary["speed"]["average"] > 0
+    assert summary["speed"]["minimum"] >= 0
+
+    assert summary["rpm"]["max"] > 0
+    assert summary["rpm"]["average"] > 0
+
+    assert summary["gear"]["max"] >= 0
+    assert summary["gear"]["average"] >= 0
+
+    assert summary["distance"] > 0

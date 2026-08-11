@@ -2,6 +2,7 @@ from app.services.session_service import SessionService
 
 
 class LapService:
+
     def __init__(self):
         self.session_service = SessionService()
 

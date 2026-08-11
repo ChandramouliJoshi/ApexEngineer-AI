@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from app.services.comparison_service import ComparisonService
 from app.visualization.telemetry_plot import TelemetryPlotter
 
 
-def main():
+def test_telemetry_plots():
 
     service = ComparisonService()
 
@@ -13,6 +15,12 @@ def main():
         "NOR"
     )
 
+    assert telemetry_1 is not None
+    assert telemetry_2 is not None
+
+    assert not telemetry_1.empty
+    assert not telemetry_2.empty
+
     plotter = TelemetryPlotter()
 
     plotter.plot_speed(
@@ -21,18 +29,21 @@ def main():
         "VER",
         "NOR"
     )
+
     plotter.plot_throttle(
         telemetry_1,
         telemetry_2,
         "VER",
         "NOR"
     )
+
     plotter.plot_brake(
         telemetry_1,
         telemetry_2,
         "VER",
         "NOR"
     )
+
     plotter.plot_gear(
         telemetry_1,
         telemetry_2,
@@ -40,7 +51,18 @@ def main():
         "NOR"
     )
 
-    print("All graphs generated successfully.")
+    output_dir = Path("output")
 
-if __name__ == "__main__":
-    main()
+    expected_files = [
+        "speed_comparison.png",
+        "throttle_comparison.png",
+        "brake_comparison.png",
+        "gear_comparison.png"
+    ]
+
+    for filename in expected_files:
+
+        file_path = output_dir / filename
+
+        assert file_path.exists()
+        assert file_path.stat().st_size > 0

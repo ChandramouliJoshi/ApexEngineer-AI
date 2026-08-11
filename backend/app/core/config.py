@@ -1,9 +1,14 @@
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# backend/
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+# backend/cache/
 CACHE_DIR = BASE_DIR / "cache"
-DATA_DIR = BASE_DIR / "data"
 
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
-DATA_DIR.mkdir(parents=True, exist_ok=True)
+# Create cache directory automatically
+CACHE_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)

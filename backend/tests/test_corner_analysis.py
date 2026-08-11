@@ -3,7 +3,7 @@ from app.services.session_service import SessionService
 from app.services.telemetry_service import TelemetryService
 
 
-def main():
+def test_corner_analysis():
 
     telemetry_service = TelemetryService()
     session_service = SessionService()
@@ -26,25 +26,24 @@ def main():
 
     results = analysis.analyze_all_corners()
 
-    print("=" * 60)
-    print("Corner Analysis")
-    print("=" * 60)
+    assert results is not None
+    assert len(results) > 0
 
     for corner in results:
 
-        print(f"\nCorner {corner['corner']}")
-        print("-" * 40)
+        assert "corner" in corner
+        assert "entry_speed" in corner
+        assert "apex_speed" in corner
+        assert "exit_speed" in corner
+        assert "max_brake" in corner
+        assert "max_throttle" in corner
+        assert "average_rpm" in corner
+        assert "samples" in corner
 
-        print(f"Entry Speed     : {corner['entry_speed']:.1f} km/h")
-        print(f"Apex Speed      : {corner['apex_speed']:.1f} km/h")
-        print(f"Exit Speed      : {corner['exit_speed']:.1f} km/h")
-        print(f"Max Brake       : {corner['max_brake']}")
-        print(f"Max Throttle    : {corner['max_throttle']:.1f}%")
-        print(f"Average RPM     : {corner['average_rpm']:.1f}")
-        print(f"Samples         : {corner['samples']}")
-
-    print("=" * 60)
-
-
-if __name__ == "__main__":
-    main()
+        assert corner["corner"] > 0
+        assert corner["entry_speed"] >= 0
+        assert corner["apex_speed"] >= 0
+        assert corner["exit_speed"] >= 0
+        assert corner["max_brake"] >= 0
+        assert corner["max_throttle"] >= 0
+        assert corner["samples"] > 0

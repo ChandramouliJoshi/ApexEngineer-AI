@@ -5,6 +5,7 @@ from app.api.sessions import router as session_router
 from app.api.telemetry import router as telemetry_router
 from app.api.analysis import router as analysis_router
 from app.api.drivers import router as drivers_router
+from app.api.laps import router as laps_router
 
 
 app = FastAPI(
@@ -34,7 +35,16 @@ def root():
     }
 
 
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "service": "ApexEngineer AI"
+    }
+
+
 app.include_router(session_router)
 app.include_router(telemetry_router)
 app.include_router(analysis_router)
 app.include_router(drivers_router)
+app.include_router(laps_router)

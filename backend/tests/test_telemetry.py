@@ -1,11 +1,14 @@
 from app.services.telemetry_service import TelemetryService
 
-telemetry = TelemetryService()
 
-lap = telemetry.get_fastest_lap(
-    2025,
-    "Monaco",
-    "VER"
-)
+def test_get_fastest_lap():
 
-print(lap)
+    telemetry = TelemetryService()
+
+    lap = telemetry.get_fastest_lap(
+        2025,
+        "Monaco",
+        "VER"
+    )
+
+    assert lap is not None

@@ -3,7 +3,7 @@ from app.services.session_service import SessionService
 from app.services.telemetry_service import TelemetryService
 
 
-def main():
+def test_corner_comparison():
 
     telemetry_service = TelemetryService()
     session_service = SessionService()
@@ -35,26 +35,32 @@ def main():
         "NOR"
     )
 
-    print("=" * 70)
-    print("Driver Corner Comparison")
-    print("=" * 70)
+    assert results is not None
+    assert len(results) > 0
 
-    for corner in results[:5]:
+    for corner in results:
 
-        print(f"\nCorner {corner['corner']}")
+        assert "corner" in corner
+        assert "driver_1" in corner
+        assert "driver_2" in corner
 
-        print(
-            f"Entry Delta : {corner['entry_speed_delta']:.1f} km/h"
+        assert "entry_speed_delta" in corner
+        assert "apex_speed_delta" in corner
+        assert "exit_speed_delta" in corner
+
+        assert "winner" in corner
+
+        assert isinstance(
+            corner["entry_speed_delta"],
+            (int, float)
         )
 
-        print(
-            f"Apex Delta  : {corner['apex_speed_delta']:.1f} km/h"
+        assert isinstance(
+            corner["apex_speed_delta"],
+            (int, float)
         )
 
-        print(
-            f"Exit Delta  : {corner['exit_speed_delta']:.1f} km/h"
+        assert isinstance(
+            corner["exit_speed_delta"],
+            (int, float)
         )
-
-
-if __name__ == "__main__":
-    main()

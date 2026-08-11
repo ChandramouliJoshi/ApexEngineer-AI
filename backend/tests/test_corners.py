@@ -1,7 +1,7 @@
 from app.services.session_service import SessionService
 
 
-def main():
+def test_circuit_corners():
 
     service = SessionService()
 
@@ -13,12 +13,12 @@ def main():
 
     circuit = session.get_circuit_info()
 
-    print("=" * 70)
-    print("Circuit Information")
-    print("=" * 70)
+    assert circuit is not None
+    assert circuit.corners is not None
+    assert not circuit.corners.empty
 
-    print(circuit.corners)
+    # Monaco should have multiple corners
+    assert len(circuit.corners) > 0
 
-
-if __name__ == "__main__":
-    main()
+    # Verify the expected corner information exists
+    assert "Distance" in circuit.corners.columns
