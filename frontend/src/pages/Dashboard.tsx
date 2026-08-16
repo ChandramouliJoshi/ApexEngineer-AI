@@ -13,7 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   LineChart,
   Line,
@@ -24,8 +24,11 @@ import {
   ResponsiveContainer,
 } from "recharts"
 
+import axios from "axios"
 import { useTelemetry } from "../hooks/useTelemetry"
 import { useEngineerReport } from "../hooks/useEngineerReport"
+import { useLaps } from "../hooks/useLaps"
+import { useDriverComparison } from "../hooks/useDriverComparison"
 
 import RacingPanel from "../components/f1/RacingPanel"
 import SectionHeader from "../components/f1/SectionHeader"
@@ -33,17 +36,225 @@ import StatusLight from "../components/f1/StatusLight"
 import TelemetryBar from "../components/f1/TelemetryBar"
 
 
+type DriverOption = {
+  code: string
+  name: string
+  number?: string
+  team?: string
+}
+
+const API_URL = "http://127.0.0.1:8000"
+
+const CHAMPIONSHIP_YEARS = [
+  2025,
+  2024,
+  2023,
+  2022,
+  2021,
+]
+
+const RACE_CALENDARS: Record<number, string[]> = {
+  2025: [
+    "Australia",
+    "China",
+    "Japan",
+    "Bahrain",
+    "Saudi Arabia",
+    "Miami",
+    "Emilia-Romagna",
+    "Monaco",
+    "Spain",
+    "Canada",
+    "Austria",
+    "Great Britain",
+    "Belgium",
+    "Hungary",
+    "Netherlands",
+    "Italy",
+    "Azerbaijan",
+    "Singapore",
+    "United States",
+    "Mexico",
+    "São Paulo",
+    "Las Vegas",
+    "Qatar",
+    "Abu Dhabi",
+  ],
+
+  2024: [
+    "Bahrain",
+    "Saudi Arabia",
+    "Australia",
+    "Japan",
+    "China",
+    "Miami",
+    "Emilia-Romagna",
+    "Monaco",
+    "Canada",
+    "Spain",
+    "Austria",
+    "Great Britain",
+    "Hungary",
+    "Belgium",
+    "Netherlands",
+    "Italy",
+    "Azerbaijan",
+    "Singapore",
+    "United States",
+    "Mexico",
+    "São Paulo",
+    "Las Vegas",
+    "Qatar",
+    "Abu Dhabi",
+  ],
+
+  2023: [
+    "Bahrain",
+    "Saudi Arabia",
+    "Australia",
+    "Azerbaijan",
+    "Miami",
+    "Monaco",
+    "Spain",
+    "Canada",
+    "Austria",
+    "Great Britain",
+    "Hungary",
+    "Belgium",
+    "Netherlands",
+    "Italy",
+    "Singapore",
+    "Japan",
+    "Qatar",
+    "United States",
+    "Mexico",
+    "São Paulo",
+    "Las Vegas",
+    "Abu Dhabi",
+  ],
+
+  2022: [
+    "Bahrain",
+    "Saudi Arabia",
+    "Australia",
+    "Emilia-Romagna",
+    "Miami",
+    "Spain",
+    "Monaco",
+    "Azerbaijan",
+    "Canada",
+    "Great Britain",
+    "Austria",
+    "France",
+    "Hungary",
+    "Belgium",
+    "Netherlands",
+    "Italy",
+    "Singapore",
+    "Japan",
+    "United States",
+    "Mexico",
+    "São Paulo",
+    "Abu Dhabi",
+  ],
+
+  2021: [
+    "Bahrain",
+    "Emilia-Romagna",
+    "Portugal",
+    "Spain",
+    "Monaco",
+    "Azerbaijan",
+    "France",
+    "Styria",
+    "Austria",
+    "Great Britain",
+    "Hungary",
+    "Belgium",
+    "Netherlands",
+    "Italy",
+    "Russia",
+    "Turkey",
+    "United States",
+    "Mexico",
+    "São Paulo",
+    "Qatar",
+    "Saudi Arabia",
+    "Abu Dhabi",
+  ],
+}
+
+const SESSION_OPTIONS = [
+  { value: "R", label: "Race" },
+  { value: "Q", label: "Qualifying" },
+  { value: "S", label: "Sprint" },
+  { value: "FP1", label: "Free Practice 1" },
+  { value: "FP2", label: "Free Practice 2" },
+  { value: "FP3", label: "Free Practice 3" },
+]
+
+function sessionLabel(session: string) {
+  return (
+    SESSION_OPTIONS.find(
+      (option) => option.value === session
+    )?.label ?? session
+  )
+}
+
 function Dashboard() {
+
+  const [selectedYear, setSelectedYear] =
+    useState(2025)
+
+  const [selectedGrandPrix, setSelectedGrandPrix] =
+    useState("Monaco")
+
+  const [selectedDriver, setSelectedDriver] =
+    useState("VER")
+
+  const [comparisonDriverSelection, setComparisonDriverSelection] =
+    useState("VER")
+
+  const [comparisonOpponentSelection, setComparisonOpponentSelection] =
+    useState("NOR")
+
+    useState("VER")
+
+    useState("NOR")
+
+  const [comparisonRequested, setComparisonRequested] =
+    useState(false)
+
+  const [selectedSession, setSelectedSession] =
+    useState("R")
+
+  const [drivers, setDrivers] =
+    useState<DriverOption[]>([])
+
+  const [driversLoading, setDriversLoading] =
+    useState(true)
+
+  const raceOptions =
+    RACE_CALENDARS[selectedYear] ?? []
+
+  useEffect(() => {
+    if (
+      raceOptions.length > 0 &&
+      !raceOptions.includes(selectedGrandPrix)
+    ) {
+      setSelectedGrandPrix(raceOptions[0])
+    }
+  }, [selectedYear])
 
   const {
     data,
     loading,
     error,
   } = useEngineerReport({
-    year: 2025,
-    grandPrix: "Monaco",
-    driver: "VER",
-    sessionType: "R",
+    year: selectedYear,
+    grandPrix: selectedGrandPrix,
+    driver: selectedDriver,
+    sessionType: selectedSession,
   })
 
   const {
@@ -51,11 +262,226 @@ function Dashboard() {
     loading: telemetryLoading,
     error: telemetryError,
   } = useTelemetry({
-    year: 2025,
-    grandPrix: "Monaco",
-    driver: "VER",
-    sessionType: "R",
+    year: selectedYear,
+    grandPrix: selectedGrandPrix,
+    driver: selectedDriver,
+    sessionType: selectedSession,
   })
+
+  const {
+    laps,
+    loading: lapsLoading,
+    error: lapsError,
+  } = useLaps({
+    year: selectedYear,
+    grandPrix: selectedGrandPrix,
+    driver: selectedDriver,
+    sessionType: selectedSession,
+    limit: 20,
+  })
+
+  const {
+    primary,
+    secondary,
+    loading: comparisonLoading,
+    error: comparisonError,
+    compare,
+    clear: clearComparison,
+  } = useDriverComparison({
+    year: selectedYear,
+    grandPrix: selectedGrandPrix,
+    sessionType: selectedSession,
+  })
+
+  useEffect(() => {
+
+    let cancelled = false
+
+    async function fetchDrivers() {
+
+      try {
+        setDriversLoading(true)
+
+        const response = await axios.get(
+          `${API_URL}/drivers/`,
+          {
+            params: {
+              year: selectedYear,
+            },
+          }
+        )
+
+        if (cancelled) return
+
+        const payload = response.data
+
+        const rows = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.drivers)
+            ? payload.drivers
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : []
+
+        const normalised: DriverOption[] =
+          rows
+            .map((driver: any) => ({
+              code:
+                driver.code ??
+                driver.Driver ??
+                driver.driver ??
+                driver.abbreviation ??
+                driver.Abbreviation ??
+                "",
+
+              name:
+                driver.name ??
+                driver.Name ??
+                driver.full_name ??
+                driver.fullName ??
+                driver.driver_name ??
+                driver.code ??
+                driver.Driver ??
+                "",
+
+              number:
+                driver.number ??
+                driver.DriverNumber ??
+                driver.driver_number,
+
+              team:
+                driver.team ??
+                driver.Team,
+            }))
+            .filter(
+              (driver: DriverOption) =>
+                driver.code.length > 0
+            )
+
+        setDrivers(normalised)
+
+        if (
+          normalised.length > 0 &&
+          !normalised.some(
+            (driver) => driver.code === comparisonDriverSelection
+          )
+        ) {
+          setComparisonDriverSelection(normalised[0].code)
+        }
+
+        if (
+          normalised.length > 1 &&
+          !normalised.some(
+            (driver) => driver.code === comparisonOpponentSelection
+          )
+        ) {
+          const fallbackOpponent =
+            normalised.find(
+              (driver) => driver.code !== comparisonDriverSelection
+            )?.code ?? normalised[1].code
+
+          setComparisonOpponentSelection(fallbackOpponent)
+        }
+
+        if (
+          normalised.length > 0 &&
+          !normalised.some(
+            (driver) =>
+              driver.code === selectedDriver
+          )
+        ) {
+          setSelectedDriver(normalised[0].code)
+        }
+
+      } catch (driverError) {
+
+        console.error(
+          "Driver list fetch failed:",
+          driverError
+        )
+
+        if (!cancelled) {
+          setDrivers([
+            {
+              code: "VER",
+              name: "Max Verstappen",
+              number: "1",
+              team: "Red Bull Racing",
+            },
+            {
+              code: "NOR",
+              name: "Lando Norris",
+              number: "4",
+              team: "McLaren",
+            },
+            {
+              code: "LEC",
+              name: "Charles Leclerc",
+              number: "16",
+              team: "Ferrari",
+            },
+            {
+              code: "PIA",
+              name: "Oscar Piastri",
+              number: "81",
+              team: "McLaren",
+            },
+            {
+              code: "HAM",
+              name: "Lewis Hamilton",
+              number: "44",
+              team: "Ferrari",
+            },
+            {
+              code: "RUS",
+              name: "George Russell",
+              number: "63",
+              team: "Mercedes",
+            },
+            {
+              code: "SAI",
+              name: "Carlos Sainz",
+              number: "55",
+              team: "Williams",
+            },
+            {
+              code: "ALO",
+              name: "Fernando Alonso",
+              number: "14",
+              team: "Aston Martin",
+            },
+            {
+              code: "GAS",
+              name: "Pierre Gasly",
+              number: "10",
+              team: "Alpine",
+            },
+            {
+              code: "ALB",
+              name: "Alexander Albon",
+              number: "23",
+              team: "Williams",
+            },
+          ])
+        }
+
+      } finally {
+
+        if (!cancelled) {
+          setDriversLoading(false)
+        }
+
+      }
+
+    }
+
+    fetchDrivers()
+
+    return () => {
+      cancelled = true
+    }
+
+  }, [selectedYear])
 
   const [telemetryMetric, setTelemetryMetric] =
     useState<
@@ -192,6 +618,119 @@ function Dashboard() {
 
 
       {/* ─────────────────────────────────────────────
+          RACE CONTROL
+      ───────────────────────────────────────────── */}
+
+      <div className="grid gap-3 rounded-xl border border-slate-800/80 bg-[#050912]/80 p-3 md:grid-cols-4">
+
+        <div>
+          <label className="mb-2 block text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
+            Championship
+          </label>
+
+          <select
+            value={selectedYear}
+            onChange={(event) =>
+              setSelectedYear(
+                Number(event.target.value)
+              )
+            }
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs font-bold text-slate-300 outline-none transition focus:border-cyan-400/60"
+          >
+            {CHAMPIONSHIP_YEARS.map((year) => (
+              <option
+                key={year}
+                value={year}
+              >
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
+            Grand Prix
+          </label>
+
+          <select
+            value={selectedGrandPrix}
+            onChange={(event) =>
+              setSelectedGrandPrix(
+                event.target.value
+              )
+            }
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs font-bold text-slate-300 outline-none transition focus:border-[#e10600]/60 disabled:cursor-wait disabled:opacity-50"
+          >
+            {(RACE_CALENDARS[selectedYear] ?? []).map((race) => (
+              <option
+                key={race}
+                value={race}
+              >
+                {race}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
+            Driver
+          </label>
+
+          <select
+            value={selectedDriver}
+            onChange={(event) =>
+              setSelectedDriver(
+                event.target.value
+              )
+            }
+            disabled={driversLoading}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs font-bold text-slate-300 outline-none transition focus:border-cyan-400/60 disabled:cursor-wait disabled:opacity-50"
+          >
+            {drivers.map((driver) => (
+              <option
+                key={driver.code}
+                value={driver.code}
+              >
+                {driver.code}
+                {driver.name
+                  ? ` · ${driver.name}`
+                  : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
+            Session
+          </label>
+
+          <select
+            value={selectedSession}
+            onChange={(event) =>
+              setSelectedSession(
+                event.target.value
+              )
+            }
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-xs font-bold text-slate-300 outline-none transition focus:border-yellow-400/60"
+          >
+            {SESSION_OPTIONS.map((session) => (
+              <option
+                key={session.value}
+                value={session.value}
+              >
+                {session.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+      </div>
+
+
+      {/* ─────────────────────────────────────────────
           SESSION HEADER
       ───────────────────────────────────────────── */}
 
@@ -200,7 +739,7 @@ function Dashboard() {
         <SectionHeader
           eyebrow="Race Intelligence"
           title="Driver Performance"
-          description="2025 Monaco Grand Prix · Race"
+          description={`${selectedYear} ${selectedGrandPrix} Grand Prix · ${sessionLabel(selectedSession)}`}
         />
 
         <div className="mb-7 flex items-center gap-4">
@@ -212,7 +751,7 @@ function Dashboard() {
             </p>
 
             <p className="mt-1 font-mono text-xs font-bold text-slate-300">
-              RACE
+              {sessionLabel(selectedSession).toUpperCase()}
             </p>
 
           </div>
@@ -223,7 +762,7 @@ function Dashboard() {
                 ? "CONNECTING"
                 : error
                   ? "OFFLINE"
-                  : "LIVE TELEMETRY"
+                  : "FASTF1 DATA FEED"
             }
           />
 
@@ -248,7 +787,10 @@ function Dashboard() {
           <div className="relative overflow-hidden border-b border-slate-800/70 p-6 lg:border-b-0 lg:border-r">
 
             <div className="pointer-events-none absolute -right-4 -top-14 select-none font-black text-[180px] leading-none text-white/[0.025]">
-              1
+              {drivers.find(
+                (driver) =>
+                  driver.code === selectedDriver
+              )?.number ?? ""}
             </div>
 
             <div className="relative flex h-full flex-col justify-between">
@@ -266,15 +808,30 @@ function Dashboard() {
                 </div>
 
                 <h2 className="mt-4 text-5xl font-black tracking-tight text-white">
-                  VER
+                  {selectedDriver}
                 </h2>
 
                 <p className="mt-1 text-sm font-medium text-slate-400">
-                  Max Verstappen
+                  {drivers.find(
+                    (driver) =>
+                      driver.code === selectedDriver
+                  )?.name ?? selectedDriver}
                 </p>
 
                 <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-700">
-                  Red Bull Racing · #1
+                  {drivers.find(
+                    (driver) =>
+                      driver.code === selectedDriver
+                  )?.team ?? "F1 DRIVER"}
+                  {drivers.find(
+                    (driver) =>
+                      driver.code === selectedDriver
+                  )?.number
+                    ? ` · #${drivers.find(
+                        (driver) =>
+                          driver.code === selectedDriver
+                      )?.number}`
+                    : ""}
                 </p>
 
               </div>
@@ -501,7 +1058,7 @@ function Dashboard() {
                         : activeTelemetryTab?.text ?? "text-cyan-300"
                   }`}
                 >
-                  VER · {activeTelemetryTab?.label ?? telemetryMetric}
+                  {selectedDriver} · {activeTelemetryTab?.label ?? telemetryMetric}
                 </span>
 
               </div>
@@ -699,11 +1256,11 @@ function Dashboard() {
             <div className="absolute right-5 top-5 text-right">
 
               <p className="text-xl font-black italic text-white">
-                MONACO
+                {selectedGrandPrix.toUpperCase()}
               </p>
 
               <p className="text-[8px] font-bold uppercase tracking-widest text-[#e10600]">
-                Circuit de Monaco
+                {selectedGrandPrix} Circuit
               </p>
 
             </div>
@@ -875,59 +1432,142 @@ function Dashboard() {
 
               <tbody>
 
-                {[
-                  ["42", "19.233", "35.103", "19.669", "1:14.005"],
-                  ["41", "19.521", "35.441", "19.801", "1:14.763"],
-                  ["40", "19.602", "35.802", "19.920", "1:15.324"],
-                  ["39", "19.411", "35.640", "19.844", "1:14.895"],
-                  ["38", "19.734", "35.712", "19.932", "1:15.378"],
-                ].map((lap, index) => (
+                {lapsLoading && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-5 py-10 text-center"
+                    >
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-800 border-t-[#e10600]" />
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-slate-600">
+                          Loading FastF1 lap data...
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
 
-                  <motion.tr
-                    key={lap[0]}
-                    initial={{
-                      opacity: 0,
-                      x: -8,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      x: 0,
-                    }}
-                    transition={{
-                      delay: index * 0.06,
-                    }}
-                    className={`
-                      border-b border-slate-900
-                      text-[10px]
-                      ${
-                        index === 0
-                          ? "bg-[#e10600]/5"
-                          : ""
-                      }
-                    `}
-                  >
+                {!lapsLoading && lapsError && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-5 py-10 text-center"
+                    >
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-red-500">
+                        {lapsError}
+                      </span>
+                    </td>
+                  </tr>
+                )}
 
-                    {lap.map((value, i) => (
-
+                {!lapsLoading &&
+                  !lapsError &&
+                  laps.length === 0 && (
+                    <tr>
                       <td
-                        key={i}
+                        colSpan={5}
+                        className="px-5 py-10 text-center"
+                      >
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-slate-600">
+                          No lap data available
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+
+                {!lapsLoading &&
+                  !lapsError &&
+                  laps.map((lap, index) => {
+
+                    const fastestLapTime = laps
+                      .filter(
+                        (item) =>
+                          item.LapTime !== null &&
+                          !item.Deleted
+                      )
+                      .reduce<number | null>(
+                        (fastest, item) =>
+                          fastest === null
+                            ? item.LapTime
+                            : Math.min(fastest, item.LapTime!),
+                        null
+                      )
+
+                    const isFastest =
+                      lap.LapTime !== null &&
+                      fastestLapTime !== null &&
+                      lap.LapTime === fastestLapTime
+
+                    return (
+                      <motion.tr
+                        key={`${lap.LapNumber}-${lap.Stint ?? "na"}`}
+                        initial={{
+                          opacity: 0,
+                          x: -8,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          x: 0,
+                        }}
+                        transition={{
+                          delay: index * 0.04,
+                        }}
                         className={`
-                          px-5 py-3 font-mono
+                          border-b border-slate-900
+                          text-[10px]
+                          transition-colors
+                          hover:bg-slate-900/40
                           ${
-                            i === 0
-                              ? "font-bold text-slate-300"
-                              : "text-slate-500"
+                            isFastest
+                              ? "bg-[#e10600]/5"
+                              : ""
                           }
                         `}
                       >
-                        {value}
-                      </td>
 
-                    ))}
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-slate-300">
+                              {lap.LapNumber}
+                            </span>
 
-                  </motion.tr>
+                            {isFastest && (
+                              <span className="rounded bg-[#e10600]/10 px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest text-[#e10600]">
+                                BEST
+                              </span>
+                            )}
+                          </div>
+                        </td>
 
-                ))}
+                        <td className="py-3 font-mono text-slate-500">
+                          {formatLapSector(lap.Sector1Time)}
+                        </td>
+
+                        <td className="py-3 font-mono text-slate-500">
+                          {formatLapSector(lap.Sector2Time)}
+                        </td>
+
+                        <td className="py-3 font-mono text-slate-500">
+                          {formatLapSector(lap.Sector3Time)}
+                        </td>
+
+                        <td
+                          className={`
+                            py-3 font-mono font-bold
+                            ${
+                              isFastest
+                                ? "text-[#e10600]"
+                                : "text-slate-300"
+                            }
+                          `}
+                        >
+                          {formatLapTime(lap.LapTime)}
+                        </td>
+
+                      </motion.tr>
+                    )
+                  })}
 
               </tbody>
 
@@ -945,42 +1585,233 @@ function Dashboard() {
           accent="cyan"
         >
 
-          <div className="space-y-5 p-5">
+          <div className="p-5">
 
-            <DriverCompare
-              driver="VER"
-              value={87}
-              delta="-"
-              color="#00b8ff"
-            />
+            {/* DRIVER SELECTORS */}
 
-            <DriverCompare
-              driver="NOR"
-              value={79}
-              delta="+0.406"
-              color="#ff8a00"
-            />
+            <div className="mb-5 space-y-3">
 
-            <DriverCompare
-              driver="LEC"
-              value={76}
-              delta="+0.621"
-              color="#e10600"
-            />
+              <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-end">
 
-            <DriverCompare
-              driver="HAM"
-              value={72}
-              delta="+0.802"
-              color="#ffb800"
-            />
+                <div>
+                  <label className="mb-2 block text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                    Primary Driver
+                  </label>
 
-            <DriverCompare
-              driver="SAI"
-              value={69}
-              delta="+1.104"
-              color="#00e676"
-            />
+                  <select
+                    value={comparisonDriverSelection}
+                    onChange={(event) => {
+                      setComparisonDriverSelection(event.target.value)
+                      setComparisonRequested(false)
+                      clearComparison()
+                    }}
+                    disabled={driversLoading || comparisonLoading}
+                    className="w-full rounded-lg border border-cyan-400/20 bg-slate-950 px-3 py-2 font-mono text-[10px] font-bold text-slate-300 outline-none transition focus:border-cyan-400/60 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {drivers.map((driver) => (
+                      <option key={driver.code} value={driver.code}>
+                        {driver.code}
+                        {driver.name ? ` · ${driver.name}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="hidden items-center justify-center pb-1 md:flex">
+                  <span className="font-mono text-[9px] font-black uppercase tracking-[0.25em] text-slate-700">
+                    VS
+                  </span>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                    Compare Against
+                  </label>
+
+                  <select
+                    value={comparisonOpponentSelection}
+                    onChange={(event) => {
+                      setComparisonOpponentSelection(event.target.value)
+                      setComparisonRequested(false)
+                      clearComparison()
+                    }}
+                    disabled={driversLoading || comparisonLoading}
+                    className="w-full rounded-lg border border-orange-400/20 bg-slate-950 px-3 py-2 font-mono text-[10px] font-bold text-slate-300 outline-none transition focus:border-orange-400/60 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {drivers
+                      .filter(
+                        (driver) =>
+                          driver.code !== comparisonDriverSelection
+                      )
+                      .map((driver) => (
+                        <option key={driver.code} value={driver.code}>
+                          {driver.code}
+                          {driver.name
+                            ? ` · ${driver.name}`
+                            : ""}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                disabled={
+                  driversLoading ||
+                  comparisonLoading ||
+                  drivers.length < 2 ||
+                  comparisonDriverSelection === comparisonOpponentSelection
+                }
+                onClick={async () => {
+                  if (
+                    comparisonDriverSelection ===
+                    comparisonOpponentSelection
+                  ) {
+                    return
+                  }
+
+                  const success = await compare(
+                    comparisonDriverSelection,
+                    comparisonOpponentSelection,
+                    drivers
+                  )
+
+                  setComparisonRequested(success)
+                }}
+                className="
+                  flex w-full items-center justify-center gap-2
+                  rounded-lg border border-cyan-400/40
+                  bg-cyan-400/10 px-4 py-2.5
+                  font-mono text-[9px] font-black uppercase tracking-[0.2em]
+                  text-cyan-300
+                  shadow-[0_0_14px_rgba(34,211,238,0.08)]
+                  transition-all duration-200
+                  hover:border-cyan-300/70 hover:bg-cyan-400/15
+                  hover:text-cyan-200
+                  disabled:cursor-not-allowed disabled:border-slate-800
+                  disabled:bg-slate-950 disabled:text-slate-700
+                  disabled:shadow-none
+                "
+              >
+                {comparisonLoading ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-700 border-t-cyan-400" />
+                    ANALYZING...
+                  </>
+                ) : (
+                  <>
+                    <Zap size={12} />
+                    RUN COMPARISON
+                  </>
+                )}
+              </button>
+
+            </div>
+
+
+            {/* LOADING */}
+
+            {comparisonLoading && (
+              <div className="flex items-center justify-center gap-3 py-10">
+
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-800 border-t-cyan-400" />
+
+                <span className="font-mono text-[9px] uppercase tracking-widest text-slate-600">
+                  Comparing telemetry...
+                </span>
+
+              </div>
+            )}
+
+
+            {/* ERROR */}
+
+            {!comparisonLoading && comparisonError && (
+              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
+
+                <p className="text-[8px] font-black uppercase tracking-widest text-red-400">
+                  Comparison Feed Error
+                </p>
+
+                <p className="mt-1 font-mono text-[9px] leading-4 text-slate-600">
+                  {comparisonError}
+                </p>
+
+              </div>
+            )}
+
+
+            {/* REAL COMPARISON */}
+
+            {!comparisonLoading &&
+              !comparisonError &&
+              comparisonRequested &&
+              primary &&
+              secondary && (
+                <div className="space-y-6">
+
+                  <div className="grid grid-cols-2 gap-3">
+
+                    <ComparisonDriverCard
+                      driver={primary}
+                      accent="#22d3ee"
+                      selected
+                    />
+
+                    <ComparisonDriverCard
+                      driver={secondary}
+                      accent="#fb923c"
+                    />
+
+                  </div>
+
+                  <ComparisonMetric
+                    label="Overall"
+                    primary={primary.overall}
+                    secondary={secondary.overall}
+                  />
+
+                  <ComparisonMetric
+                    label="Speed"
+                    primary={primary.speed}
+                    secondary={secondary.speed}
+                  />
+
+                  <ComparisonMetric
+                    label="Throttle"
+                    primary={primary.throttle}
+                    secondary={secondary.throttle}
+                  />
+
+                  <ComparisonMetric
+                    label="Braking"
+                    primary={primary.braking}
+                    secondary={secondary.braking}
+                  />
+
+                  <ComparisonMetric
+                    label="Consistency"
+                    primary={primary.consistency}
+                    secondary={secondary.consistency}
+                  />
+
+                </div>
+              )}
+
+
+            {!comparisonLoading &&
+              !comparisonError &&
+              (!comparisonRequested || !primary || !secondary) && (
+                <div className="py-8 text-center">
+
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">
+                    Select two drivers, then run the comparison
+                  </p>
+
+                </div>
+              )}
 
           </div>
 
@@ -1156,6 +1987,39 @@ function Dashboard() {
    SMALL COMPONENTS
 ───────────────────────────────────────────── */
 
+function formatLapSector(
+  seconds: number | null
+): string {
+  if (
+    seconds === null ||
+    !Number.isFinite(seconds)
+  ) {
+    return "—"
+  }
+
+  return seconds.toFixed(3)
+}
+
+
+function formatLapTime(
+  seconds: number | null
+): string {
+  if (
+    seconds === null ||
+    !Number.isFinite(seconds)
+  ) {
+    return "—"
+  }
+
+  const minutes = Math.floor(seconds / 60)
+  const remaining = seconds - minutes * 60
+
+  return `${minutes}:${remaining
+    .toFixed(3)
+    .padStart(6, "0")}`
+}
+
+
 function SectorBox({
   sector,
   time,
@@ -1239,44 +2103,63 @@ function MiniStat({
 }
 
 
-function DriverCompare({
+function ComparisonDriverCard({
   driver,
-  value,
-  delta,
-  color,
+  accent,
+  selected = false,
 }: {
-  driver: string
-  value: number
-  delta: string
-  color: string
+  driver: {
+    code: string
+    name: string
+    team?: string
+    overall: number
+  }
+  accent: string
+  selected?: boolean
 }) {
   return (
-    <div>
+    <div
+      className="rounded-lg border p-3"
+      style={{
+        borderColor: `${accent}33`,
+        background: `${accent}08`,
+      }}
+    >
 
-      <div className="mb-2 flex items-center justify-between">
+      <div className="flex items-center justify-between">
 
-        <span className="font-mono text-xs font-bold text-slate-300">
-          {driver}
-        </span>
+        <div>
 
-        <span className="font-mono text-[9px] text-slate-600">
-          {delta}
-        </span>
+          <p
+            className="font-mono text-lg font-black"
+            style={{ color: accent }}
+          >
+            {driver.code}
+          </p>
 
-      </div>
+          <p className="mt-0.5 text-[9px] font-medium text-slate-500">
+            {driver.name}
+          </p>
 
-      <div className="h-2 overflow-hidden rounded-full bg-slate-900">
+          {driver.team && (
+            <p className="mt-1 text-[7px] font-bold uppercase tracking-widest text-slate-700">
+              {driver.team}
+            </p>
+          )}
 
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
-          transition={{ duration: 0.8 }}
-          className="h-full rounded-full"
-          style={{
-            background: color,
-            boxShadow: `0 0 8px ${color}`,
-          }}
-        />
+        </div>
+
+        {selected && (
+          <span
+            className="rounded px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest"
+            style={{
+              color: accent,
+              background: `${accent}12`,
+            }}
+          >
+            PRIMARY
+          </span>
+        )}
 
       </div>
 
@@ -1284,6 +2167,132 @@ function DriverCompare({
   )
 }
 
+
+function ComparisonMetric({
+  label,
+  primary,
+  secondary,
+}: {
+  label: string
+  primary: number
+  secondary: number
+}) {
+  const primaryValue = Math.min(
+    100,
+    Math.max(0, Number(primary) || 0)
+  )
+
+  const secondaryValue = Math.min(
+    100,
+    Math.max(0, Number(secondary) || 0)
+  )
+
+  const delta = primaryValue - secondaryValue
+
+  return (
+    <div>
+
+      <div className="mb-2 flex items-center justify-between">
+
+        <span className="font-mono text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+          {label}
+        </span>
+
+        <span
+          className={`
+            font-mono
+            text-[8px]
+            ${
+              delta > 0
+                ? "text-cyan-400"
+                : delta < 0
+                  ? "text-orange-400"
+                  : "text-slate-700"
+            }
+          `}
+        >
+          Δ {delta >= 0 ? "+" : ""}
+          {delta.toFixed(2)}
+        </span>
+
+      </div>
+
+
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+
+        {/* PRIMARY */}
+
+        <div>
+
+          <div className="mb-1 text-right font-mono text-[9px] font-bold text-cyan-400">
+            {primaryValue.toFixed(2)}
+          </div>
+
+          <div className="h-1.5 overflow-hidden rounded-full bg-slate-900">
+
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{
+                width: `${primaryValue}%`,
+              }}
+              transition={{
+                duration: 0.7,
+                ease: "easeOut",
+              }}
+              className="ml-auto h-full rounded-full"
+              style={{
+                background: "#22d3ee",
+                boxShadow:
+                  "0 0 8px rgba(34,211,238,0.35)",
+              }}
+            />
+
+          </div>
+
+        </div>
+
+
+        <span className="font-mono text-[8px] font-bold text-slate-800">
+          VS
+        </span>
+
+
+        {/* SECONDARY */}
+
+        <div>
+
+          <div className="mb-1 font-mono text-[9px] font-bold text-orange-400">
+            {secondaryValue.toFixed(2)}
+          </div>
+
+          <div className="h-1.5 overflow-hidden rounded-full bg-slate-900">
+
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{
+                width: `${secondaryValue}%`,
+              }}
+              transition={{
+                duration: 0.7,
+                ease: "easeOut",
+              }}
+              className="h-full rounded-full"
+              style={{
+                background: "#fb923c",
+                boxShadow:
+                  "0 0 8px rgba(251,146,60,0.35)",
+              }}
+            />
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  )
+}
 
 function Insight({
   icon: Icon,
