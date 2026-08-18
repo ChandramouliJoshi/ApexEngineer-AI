@@ -2351,5 +2351,4 @@ function Insight({
   )
 }
 
-
 export default Dashboard
