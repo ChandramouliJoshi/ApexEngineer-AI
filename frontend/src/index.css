@@ -12,6 +12,8 @@
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -28,7 +30,6 @@ body,
 }
 
 body {
-
   background-color: #030508;
 
   background-image:
@@ -40,41 +41,162 @@ body {
       0deg,
       transparent,
       transparent 39px,
-      rgba(255,255,255,0.018) 40px
+      rgba(255, 255, 255, 0.018) 40px
     ),
     repeating-linear-gradient(
       90deg,
       transparent,
       transparent 39px,
-      rgba(255,255,255,0.018) 40px
+      rgba(255, 255, 255, 0.018) 40px
     );
 
   overflow-x: hidden;
+
+  /*
+   * Slightly stronger base readability.
+   * Individual Tailwind classes still override this.
+   */
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* Carbon fiber */
+
+/* ============================================================
+   APEXENGINEER — GLOBAL TYPOGRAPHY
+   ============================================================ */
+
+/*
+ * Small engineering labels.
+ *
+ * Use for:
+ * SESSION
+ * DRIVER
+ * TEAM
+ * DATA FEED
+ * etc.
+ */
+
+.ae-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+
+/*
+ * Secondary labels.
+ */
+
+.ae-label-muted {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+
+/*
+ * Normal engineering values.
+ */
+
+.ae-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+
+/*
+ * Important values.
+ */
+
+.ae-value-strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+
+/*
+ * Table headers.
+ */
+
+.ae-table-header {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+
+/*
+ * Table values.
+ */
+
+.ae-table-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+
+/*
+ * Secondary table values.
+ */
+
+.ae-table-value-muted {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+
+/* ============================================================
+   CARBON FIBER
+   ============================================================ */
 
 .carbon {
   background:
     linear-gradient(
       45deg,
-      rgba(255,255,255,0.025) 25%,
+      rgba(255, 255, 255, 0.025) 25%,
       transparent 25%,
       transparent 75%,
-      rgba(255,255,255,0.025) 75%
+      rgba(255, 255, 255, 0.025) 75%
     ),
     linear-gradient(
       -45deg,
-      rgba(255,255,255,0.025) 25%,
+      rgba(255, 255, 255, 0.025) 25%,
       transparent 25%,
       transparent 75%,
-      rgba(255,255,255,0.025) 75%
+      rgba(255, 255, 255, 0.025) 75%
     );
 
   background-size: 8px 8px;
 }
 
-/* Glowing F1 border */
+
+/* ============================================================
+   GLOWING F1 BORDER
+   ============================================================ */
 
 .f1-border {
   position: relative;
@@ -113,22 +235,31 @@ body {
 
 }
 
-/* Telemetry glow */
+
+/* ============================================================
+   TELEMETRY GLOW
+   ============================================================ */
 
 .telemetry-glow {
   box-shadow:
-    0 0 0 1px rgba(0,184,255,0.08),
-    0 0 30px rgba(0,184,255,0.05);
+    0 0 0 1px rgba(0, 184, 255, 0.08),
+    0 0 30px rgba(0, 184, 255, 0.05);
 }
 
-/* Red glow */
+
+/* ============================================================
+   RED GLOW
+   ============================================================ */
 
 .red-glow {
   box-shadow:
-    0 0 20px rgba(225,6,0,0.15);
+    0 0 20px rgba(225, 6, 0, 0.15);
 }
 
-/* Scanline */
+
+/* ============================================================
+   SCANLINE
+   ============================================================ */
 
 .scanline {
   position: relative;
@@ -144,7 +275,7 @@ body {
 
   height: 1px;
 
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
 
   animation: scan 5s linear infinite;
 
@@ -163,14 +294,20 @@ body {
 
 }
 
-/* Selection */
+
+/* ============================================================
+   SELECTION
+   ============================================================ */
 
 ::selection {
   background: #e10600;
   color: white;
 }
 
-/* Scrollbar */
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 
 ::-webkit-scrollbar {
   width: 7px;

@@ -195,6 +195,117 @@ export default function Drivers() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200">
 
+      <style>{`
+        .driver-hover-card {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+          transition:
+            transform 180ms ease,
+            border-color 180ms ease,
+            box-shadow 180ms ease,
+            background-color 180ms ease;
+        }
+
+        .driver-hover-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: -1;
+          background:
+            radial-gradient(
+              circle at 85% 12%,
+              rgba(34,211,238,0.08),
+              transparent 30%
+            ),
+            linear-gradient(
+              115deg,
+              transparent 0%,
+              rgba(255,255,255,0.035) 44%,
+              transparent 63%
+            );
+          transform: translateX(-120%);
+          transition: transform 600ms ease;
+        }
+
+        .driver-hover-card:hover {
+          transform: translateY(-5px);
+          box-shadow:
+            0 18px 45px rgba(0,0,0,0.30),
+            0 0 28px rgba(34,211,238,0.055);
+        }
+
+        .driver-hover-card:hover::after {
+          transform: translateX(120%);
+        }
+
+        .driver-number {
+          transition:
+            transform 220ms ease,
+            color 220ms ease,
+            text-shadow 220ms ease;
+        }
+
+        .driver-hover-card:hover .driver-number {
+          transform: translateX(4px);
+          color: rgb(15 23 42);
+          text-shadow: 0 0 18px rgba(34,211,238,0.08);
+        }
+
+        .driver-chip {
+          transition:
+            transform 180ms ease,
+            background-color 180ms ease,
+            border-color 180ms ease;
+        }
+
+        .driver-hover-card:hover .driver-chip {
+          transform: translateY(-1px);
+          background-color: rgba(15,23,42,0.95);
+        }
+
+        .driver-footer {
+          transition:
+            border-color 180ms ease,
+            color 180ms ease;
+        }
+
+        .driver-hover-card:hover .driver-footer {
+          border-color: rgba(51,65,85,0.85);
+        }
+
+        .filter-shell {
+          transition:
+            border-color 180ms ease,
+            box-shadow 180ms ease;
+        }
+
+        .filter-shell:focus-within {
+          border-color: rgba(34,211,238,0.24);
+          box-shadow: 0 0 32px rgba(34,211,238,0.035);
+        }
+
+        .team-chip {
+          transition:
+            transform 150ms ease,
+            border-color 150ms ease,
+            background-color 150ms ease,
+            color 150ms ease;
+        }
+
+        .team-chip:hover {
+          transform: translateY(-1px);
+        }
+
+        .selected-driver-panel {
+          box-shadow:
+            inset 0 1px 0 rgba(34,211,238,0.08),
+            0 16px 40px rgba(0,0,0,0.18);
+        }
+      `}</style>
+
+
       {/* ========================================================
           HEADER
       ========================================================= */}
@@ -352,7 +463,7 @@ export default function Drivers() {
                 opacity: 0,
                 y: -10,
               }}
-              className="relative mb-6 overflow-hidden rounded-xl border border-cyan-400/20 bg-cyan-400/[0.025]"
+              className="selected-driver-panel relative mb-6 overflow-hidden rounded-xl border border-cyan-400/20 bg-cyan-400/[0.025]"
             >
 
               <div className="absolute left-0 top-0 h-full w-px bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.6)]" />
@@ -397,6 +508,35 @@ export default function Drivers() {
 
                 </div>
 
+                <div className="flex flex-wrap items-center gap-2 sm:ml-auto sm:mr-3">
+                  <div className="rounded-md border border-cyan-400/20 bg-cyan-400/[0.04] px-3 py-2">
+                    <p className="font-mono text-[6px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                      NUMBER
+                    </p>
+                    <p className="mt-0.5 font-mono text-sm font-black text-cyan-300">
+                      {selectedDriverData.driver_number}
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2">
+                    <p className="font-mono text-[6px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                      CODE
+                    </p>
+                    <p className="mt-0.5 font-mono text-sm font-black text-slate-200">
+                      {selectedDriverData.abbreviation}
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border border-emerald-400/15 bg-emerald-400/[0.025] px-3 py-2">
+                    <p className="font-mono text-[6px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                      PROFILE
+                    </p>
+                    <p className="mt-0.5 font-mono text-[8px] font-black uppercase tracking-widest text-emerald-300">
+                      ACTIVE
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={() =>
@@ -424,7 +564,7 @@ export default function Drivers() {
             FILTER PANEL
         ========================================================= */}
 
-        <section className="relative mb-7 overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
+        <section className="filter-shell relative mb-7 overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/60 p-4">
 
           {/* Corner accents */}
 
@@ -515,7 +655,7 @@ export default function Drivers() {
                     font-black
                     uppercase
                     tracking-widest
-                    transition-all
+                    team-chip
                     ${
                       active
                         ? `${style.border} ${style.text} bg-white/[0.025]`
@@ -695,6 +835,7 @@ export default function Drivers() {
                         )
                       }
                       className={`
+                        driver-hover-card
                         group
                         relative
                         overflow-hidden
@@ -711,7 +852,7 @@ export default function Drivers() {
                         ${style.glow}
                         ${
                           isSelected
-                            ? "ring-1 ring-cyan-400/40 shadow-[0_0_30px_rgba(34,211,238,0.08)]"
+                            ? "ring-1 ring-cyan-400/50 border-cyan-400/60 shadow-[0_0_34px_rgba(34,211,238,0.10)]"
                             : ""
                         }
                       `}
@@ -761,12 +902,13 @@ export default function Drivers() {
 
                       <div className="flex items-start justify-between">
 
-                        <span className="select-none font-mono text-6xl font-black leading-none tracking-tighter text-slate-900 transition-all duration-300 group-hover:text-slate-800">
+                        <span className="driver-number select-none font-mono text-6xl font-black leading-none tracking-tighter text-slate-900">
                           {driver.driver_number}
                         </span>
 
                         <span
                           className={`
+                            driver-chip
                             rounded-md
                             border
                             bg-slate-900/70
@@ -816,7 +958,7 @@ export default function Drivers() {
 
                       {/* Footer */}
 
-                      <div className="mt-7 flex items-center justify-between border-t border-slate-900 pt-3">
+                      <div className="driver-footer mt-7 flex items-center justify-between border-t border-slate-900 pt-3">
 
                         <span className="font-mono text-[7px] uppercase tracking-[0.2em] text-slate-700 transition group-hover:text-slate-500">
                           {isSelected
