@@ -1308,7 +1308,6 @@ function Dashboard() {
                 r="6"
                 fill="#00b8ff"
                 animate={{
-                  r: [5, 9, 5],
                   opacity: [1, 0.5, 1],
                 }}
                 transition={{

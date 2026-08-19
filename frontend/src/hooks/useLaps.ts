@@ -85,7 +85,7 @@ export function useLaps({
               : []
 
         const normalised: LapData[] = rows
-          .map((row: any) => ({
+          .map((row: any): LapData => ({
             LapNumber: Number(
               row.LapNumber ??
               row.lap_number ??
@@ -161,17 +161,21 @@ export function useLaps({
             ),
           }))
           .filter(
-            (lap) =>
+            (lap: LapData) =>
               Number.isFinite(lap.LapNumber)
           )
           .sort(
-            (a, b) =>
+            (a: LapData, b: LapData) =>
               b.LapNumber - a.LapNumber
           )
 
         setLaps(normalised)
+
         setTotal(
-          Number(payload?.total ?? normalised.length)
+          Number(
+            payload?.total ??
+            normalised.length
+          )
         )
 
       } catch (err: any) {
