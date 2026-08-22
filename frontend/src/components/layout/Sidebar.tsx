@@ -215,11 +215,7 @@ function Sidebar() {
               Backend Online
             </span>
 
-          </div>
-
-          <p className="mt-1 pl-5 text-[10px] text-slate-600">
-            FastAPI · 127.0.0.1:8000
-          </p>
+          </div>          
 
         </div>
 
