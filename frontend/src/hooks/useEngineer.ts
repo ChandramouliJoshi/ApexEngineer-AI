@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 
-
 export interface EngineerData {
   telemetry: {
     speed: {
@@ -60,7 +59,6 @@ export interface EngineerData {
   }[]
 }
 
-
 interface UseEngineerParams {
   year: number
   grandPrix: string
@@ -68,16 +66,13 @@ interface UseEngineerParams {
   sessionType: string
 }
 
-
 interface UseEngineerResult {
   data: EngineerData | null
   loading: boolean
   error: string | null
 }
 
-
 const API_URL = "http://127.0.0.1:8000"
-
 
 export function useEngineer({
   year,
@@ -85,31 +80,19 @@ export function useEngineer({
   driver,
   sessionType,
 }: UseEngineerParams): UseEngineerResult {
-
-  const [data, setData] =
-    useState<EngineerData | null>(null)
-
-  const [loading, setLoading] =
-    useState(true)
-
-  const [error, setError] =
-    useState<string | null>(null)
-
+  const [data, setData] = useState<EngineerData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-
     let cancelled = false
 
-
     async function fetchEngineerReport() {
-
       try {
-
         setLoading(true)
         setError(null)
 
-
-        const response = await axios.get(
+        const response = await axios.get<EngineerData>(
           `${API_URL}/analysis/engineer`,
           {
             params: {
@@ -121,70 +104,60 @@ export function useEngineer({
           }
         )
 
-
         if (cancelled) {
           return
         }
 
-
-        const payload = response.data
-
-
-        if (!payload) {
+        if (!response.data) {
           throw new Error(
             "Engineer endpoint returned no data."
           )
         }
 
-
-        setData(payload)
-
-      }
-      catch (err: any) {
-
+        setData(response.data)
+      } catch (err: unknown) {
         if (cancelled) {
           return
         }
-
 
         console.error(
           "Engineer report fetch failed:",
           err
         )
 
+        if (axios.isAxiosError(err)) {
+          setError(
+            err.response?.data?.detail ??
+            err.message ??
+            "Unable to load engineer report."
+          )
+        } else if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError(
+            "Unable to load engineer report."
+          )
+        }
 
-        setError(
-          err?.response?.data?.detail ??
-          err?.message ??
-          "Unable to load engineer report."
-        )
-
-      }
-      finally {
-
+        setData(null)
+      } finally {
         if (!cancelled) {
           setLoading(false)
         }
-
       }
-
     }
 
-
     fetchEngineerReport()
-
 
     return () => {
       cancelled = true
     }
-
   }, [
     year,
     grandPrix,
     driver,
     sessionType,
   ])
-
 
   return {
     data,
