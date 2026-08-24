@@ -9,76 +9,137 @@ class RecommendationEngine:
 
         scores = self.scoring.get_score()
 
-        if scores["speed_score"] < 60:
+        # ======================================================
+        # Speed
+        # ======================================================
+
+        speed_score = scores["speed_score"]
+
+        if speed_score < 60:
             recommendations.append({
                 "area": "Speed",
                 "priority": "High",
-                "message":
-                    "Focus on carrying more speed through the lap."
+                "message": (
+                    f"Speed performance is below target "
+                    f"({speed_score:.1f}/100). Focus on carrying "
+                    "more speed through the lap, particularly "
+                    "through slower corners."
+                )
             })
 
-        elif scores["speed_score"] < 75:
+        elif speed_score < 75:
             recommendations.append({
                 "area": "Speed",
                 "priority": "Medium",
-                "message":
-                    "Look for opportunities to increase minimum and average speed."
+                "message": (
+                    f"Speed performance is moderate "
+                    f"({speed_score:.1f}/100). Look for opportunities "
+                    "to increase minimum and average corner speed."
+                )
             })
 
-        if scores["throttle_score"] < 50:
+        # ======================================================
+        # Throttle
+        # ======================================================
+
+        throttle_score = scores["throttle_score"]
+
+        if throttle_score < 50:
             recommendations.append({
                 "area": "Throttle",
                 "priority": "High",
-                "message":
-                    "Improve throttle application and maximize full-throttle time."
+                "message": (
+                    f"Full-throttle performance is low "
+                    f"({throttle_score:.1f}%). Improve throttle "
+                    "application and aim for earlier, smoother "
+                    "acceleration on corner exits."
+                )
             })
 
-        elif scores["throttle_score"] < 70:
+        elif throttle_score < 70:
             recommendations.append({
                 "area": "Throttle",
                 "priority": "Medium",
-                "message":
-                    "Work on earlier and smoother throttle application."
+                "message": (
+                    f"Full-throttle usage is moderate "
+                    f"({throttle_score:.1f}%). Look for opportunities "
+                    "to apply throttle earlier while maintaining "
+                    "traction and stability."
+                )
             })
 
-        if scores["braking_score"] < 60:
+        # ======================================================
+        # Braking
+        # ======================================================
+
+        braking_score = scores["braking_score"]
+
+        if braking_score < 60:
             recommendations.append({
                 "area": "Braking",
                 "priority": "High",
-                "message":
-                    "Improve braking efficiency and reduce unnecessary braking."
+                "message": (
+                    f"Braking efficiency is low "
+                    f"({braking_score:.1f}/100). Review braking points "
+                    "and reduce unnecessary time spent on the brakes."
+                )
             })
 
-        elif scores["braking_score"] < 75:
+        elif braking_score < 75:
             recommendations.append({
                 "area": "Braking",
                 "priority": "Medium",
-                "message":
-                    "Refine braking points and reduce time spent on the brakes."
+                "message": (
+                    f"Braking efficiency can be improved "
+                    f"({braking_score:.1f}/100). Refine braking points "
+                    "and work toward shorter, more controlled braking "
+                    "phases."
+                )
             })
 
-        if scores["consistency_score"] < 60:
+        # ======================================================
+        # Consistency
+        # ======================================================
+
+        consistency_score = scores["consistency_score"]
+
+        if consistency_score < 60:
             recommendations.append({
                 "area": "Consistency",
                 "priority": "High",
-                "message":
-                    "Work on maintaining a more consistent speed profile."
+                "message": (
+                    f"Speed consistency is weak "
+                    f"({consistency_score:.1f}/100). Focus on repeating "
+                    "consistent braking, cornering and throttle "
+                    "patterns across the lap."
+                )
             })
 
-        elif scores["consistency_score"] < 75:
+        elif consistency_score < 75:
             recommendations.append({
                 "area": "Consistency",
                 "priority": "Medium",
-                "message":
-                    "Focus on repeating braking, cornering and throttle patterns."
+                "message": (
+                    f"Speed consistency is moderate "
+                    f"({consistency_score:.1f}/100). Focus on making "
+                    "braking, cornering and throttle inputs more "
+                    "repeatable."
+                )
             })
+
+        # ======================================================
+        # Overall
+        # ======================================================
 
         if not recommendations:
             recommendations.append({
                 "area": "Overall",
                 "priority": "Low",
-                "message":
-                    "Performance is well balanced. Focus on marginal gains."
+                "message": (
+                    "Performance is well balanced across the measured "
+                    "areas. Focus on marginal gains and maintaining "
+                    "consistency."
+                )
             })
 
         return recommendations
