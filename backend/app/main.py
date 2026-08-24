@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.sessions import router as session_router
 from app.api.telemetry import router as telemetry_router
@@ -14,7 +15,10 @@ app = FastAPI(
 )
 
 
-# Allow requests from the React frontend
+# ==========================================================
+# CORS
+# ==========================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -27,6 +31,46 @@ app.add_middleware(
 )
 
 
+# ==========================================================
+# GLOBAL ERROR HANDLER
+# ==========================================================
+
+@app.exception_handler(Exception)
+async def global_exception_handler(
+    request: Request,
+    exc: Exception
+):
+    """
+    Converts unexpected backend exceptions into
+    a consistent JSON response.
+
+    The full traceback will still appear in the
+    Uvicorn console for debugging.
+    """
+
+    print(
+        f"\n[ERROR] {request.method} {request.url}"
+    )
+    print(
+        f"[ERROR] {type(exc).__name__}: {str(exc)}"
+    )
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": str(exc)
+            }
+        }
+    )
+
+
+# ==========================================================
+# ROOT
+# ==========================================================
+
 @app.get("/")
 def root():
     return {
@@ -35,6 +79,10 @@ def root():
     }
 
 
+# ==========================================================
+# HEALTH CHECK
+# ==========================================================
+
 @app.get("/health")
 def health():
     return {
@@ -42,6 +90,10 @@ def health():
         "service": "ApexEngineer AI"
     }
 
+
+# ==========================================================
+# API ROUTERS
+# ==========================================================
 
 app.include_router(session_router)
 app.include_router(telemetry_router)
