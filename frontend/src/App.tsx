@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import {
   BrowserRouter,
   Routes,
@@ -6,141 +7,77 @@ import {
 
 import AppLayout from "./components/layout/AppLayout"
 
-import Dashboard from "./pages/Dashboard"
-import Drivers from "./pages/Drivers"
-import Laps from "./pages/Laps"
-import Telemetry from "./pages/Telemetry"
-import Sectors from "./pages/Sectors"
-import Corners from "./pages/Corners"
-import Tyres from "./pages/Tyres"
-import Weather from "./pages/Weather"
-import Delta from "./pages/Delta"
-import CornerComparison from "./pages/CornerComparison"
-import SectorComparison from "./pages/SectorComparison"
-import Engineer from "./pages/Engineer"
-import EngineerComparison from "./pages/EngineerComparison"
+const Dashboard = lazy(() => import("./pages/Dashboard"))
+const Drivers = lazy(() => import("./pages/Drivers"))
+const Laps = lazy(() => import("./pages/Laps"))
+const Telemetry = lazy(() => import("./pages/Telemetry"))
+const Sectors = lazy(() => import("./pages/Sectors"))
+const Corners = lazy(() => import("./pages/Corners"))
+const Tyres = lazy(() => import("./pages/Tyres"))
+const Weather = lazy(() => import("./pages/Weather"))
+const Delta = lazy(() => import("./pages/Delta"))
+const CornerComparison = lazy(() => import("./pages/CornerComparison"))
+const SectorComparison = lazy(() => import("./pages/SectorComparison"))
+const Engineer = lazy(() => import("./pages/Engineer"))
+const EngineerComparison = lazy(() => import("./pages/EngineerComparison"))
 
+function PageLoader() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="text-sm text-slate-400">
+        Loading...
+      </div>
+    </div>
+  )
+}
 
 function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route element={<AppLayout />}>
 
-      <Routes>
+            <Route path="/" element={<Dashboard />} />
 
-        <Route
-          element={<AppLayout />}
-        >
+            <Route path="/drivers" element={<Drivers />} />
 
-          {/* Dashboard */}
+            <Route path="/laps" element={<Laps />} />
 
-          <Route
-            path="/"
-            element={<Dashboard />}
-          />
+            <Route path="/telemetry" element={<Telemetry />} />
 
+            <Route path="/sectors" element={<Sectors />} />
 
-          {/* Drivers */}
+            <Route path="/corners" element={<Corners />} />
 
-          <Route
-            path="/drivers"
-            element={<Drivers />}
-          />
+            <Route
+              path="/corner-comparison"
+              element={<CornerComparison />}
+            />
 
+            <Route
+              path="/sector-comparison"
+              element={<SectorComparison />}
+            />
 
-          {/* Laps */}
+            <Route path="/tyres" element={<Tyres />} />
 
-          <Route
-            path="/laps"
-            element={<Laps />}
-          />
+            <Route path="/weather" element={<Weather />} />
 
+            <Route path="/delta" element={<Delta />} />
 
-          {/* Telemetry */}
+            <Route path="/engineer" element={<Engineer />} />
 
-          <Route
-            path="/telemetry"
-            element={<Telemetry />}
-          />
+            <Route
+              path="/engineer-comparison"
+              element={<EngineerComparison />}
+            />
 
-
-          {/* Sectors */}
-
-          <Route
-            path="/sectors"
-            element={<Sectors />}
-          />
-
-
-          {/* Corners */}
-
-          <Route
-            path="/corners"
-            element={<Corners />}
-          />
-
-
-          {/* Corner Comparison */}
-
-          <Route
-            path="/corner-comparison"
-            element={<CornerComparison />}
-          />
-
-
-          {/* Sector Comparison */}
-
-          <Route
-            path="/sector-comparison"
-            element={<SectorComparison />}
-          />
-
-
-          {/* Tyres */}
-
-          <Route
-            path="/tyres"
-            element={<Tyres />}
-          />
-
-
-          {/* Weather */}
-
-          <Route
-            path="/weather"
-            element={<Weather />}
-          />
-
-
-          {/* Delta */}
-
-          <Route
-            path="/delta"
-            element={<Delta />}
-          />
-
-
-          {/* Engineer */}
-
-          <Route
-            path="/engineer"
-            element={<Engineer />}
-          />
-
-
-          {/* Engineer Comparison */}
-
-          <Route
-            path="/engineer-comparison"
-            element={<EngineerComparison />}
-          />
-
-        </Route>
-
-      </Routes>
-
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }
-
 
 export default App
