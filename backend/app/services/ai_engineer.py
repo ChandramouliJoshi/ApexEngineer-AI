@@ -20,18 +20,18 @@ class AIEngineer:
         self.circuit_info = circuit_info
 
     # ==========================================================
-    # Engineering Summary
+    # ENGINEERING SUMMARY
     # ==========================================================
 
-    def _generate_engineering_summary(
-        self,
-        score
-    ):
+    def _generate_engineering_summary(self, score):
+
         breakdown = {
-            "Speed": score["speed_score"],
-            "Throttle": score["throttle_score"],
-            "Braking": score["braking_score"],
-            "Consistency": score["consistency_score"]
+            "Speed": float(score.get("speed_score", 0)),
+            "Throttle": float(score.get("throttle_score", 0)),
+            "Braking": float(score.get("braking_score", 0)),
+            "Consistency": float(
+                score.get("consistency_score", 0)
+            ),
         }
 
         strongest_area = max(
@@ -53,7 +53,7 @@ class AIEngineer:
         ]
 
         # ------------------------------------------------------
-        # Determine priority
+        # Priority
         # ------------------------------------------------------
 
         if weakest_score < 50:
@@ -69,79 +69,88 @@ class AIEngineer:
         # Engineering message
         # ------------------------------------------------------
 
-        if weakest_area == "Throttle":
+        messages = {
 
-            message = (
+            "Throttle": (
                 f"Throttle is the primary performance limitation "
                 f"with a score of {weakest_score:.2f}/100. "
-                f"Focus on improving throttle application and "
-                f"earlier, smoother acceleration while maintaining "
-                f"the driver's strength in {strongest_area.lower()}."
-            )
+                f"Focus on earlier and smoother throttle application "
+                f"while maintaining the driver's strength in "
+                f"{strongest_area.lower()}."
+            ),
 
-        elif weakest_area == "Braking":
-
-            message = (
+            "Braking": (
                 f"Braking is the primary performance limitation "
                 f"with a score of {weakest_score:.2f}/100. "
-                f"Focus on improving braking points, brake release "
-                f"and corner entry control while maintaining "
-                f"the driver's strength in {strongest_area.lower()}."
-            )
+                f"Focus on braking points, brake release and "
+                f"corner-entry control while maintaining the "
+                f"driver's strength in "
+                f"{strongest_area.lower()}."
+            ),
 
-        elif weakest_area == "Consistency":
-
-            message = (
+            "Consistency": (
                 f"Consistency is the primary performance limitation "
                 f"with a score of {weakest_score:.2f}/100. "
                 f"Focus on repeating consistent braking, cornering "
-                f"and throttle patterns while maintaining "
-                f"the driver's strength in {strongest_area.lower()}."
-            )
+                f"and throttle patterns while maintaining the "
+                f"driver's strength in "
+                f"{strongest_area.lower()}."
+            ),
 
-        else:
-
-            message = (
+            "Speed": (
                 f"Speed is the primary performance limitation "
                 f"with a score of {weakest_score:.2f}/100. "
                 f"Focus on improving corner speed and maintaining "
                 f"momentum through the lap."
-            )
+            ),
+        }
 
         return {
-            "overall_score": score["overall_score"],
+            "overall_score": float(
+                score.get("overall_score", 0)
+            ),
 
-            "strongest_area": strongest_area,
+            "strongest_area":
+                strongest_area,
 
-            "strongest_score": strongest_score,
+            "strongest_score":
+                strongest_score,
 
-            "weakest_area": weakest_area,
+            "weakest_area":
+                weakest_area,
 
-            "weakest_score": weakest_score,
+            "weakest_score":
+                weakest_score,
 
-            "priority": priority,
+            "priority":
+                priority,
 
-            "message": message
+            "message":
+                messages[weakest_area],
         }
 
     # ==========================================================
-    # Corner Engineering Summary
+    # CORNER ENGINEERING SUMMARY
     # ==========================================================
 
-    def _generate_corner_summary(
-        self,
-        corners
-    ):
+    def _generate_corner_summary(self, corners):
+
         if not corners:
+
             return {
                 "total_corners": 0,
+
                 "highest_braking_corner": None,
+
                 "largest_speed_loss_corner": None,
+
                 "best_acceleration_corner": None,
+
                 "summary": (
                     "Corner analysis unavailable because "
-                    "circuit information was not provided."
-                )
+                    "circuit information or valid telemetry "
+                    "was not provided."
+                ),
             }
 
         # ------------------------------------------------------
@@ -150,7 +159,10 @@ class AIEngineer:
 
         highest_braking = max(
             corners,
-            key=lambda x: x["braking_intensity"]
+            key=lambda x: x.get(
+                "braking_intensity",
+                0
+            )
         )
 
         # ------------------------------------------------------
@@ -159,7 +171,10 @@ class AIEngineer:
 
         largest_speed_loss = max(
             corners,
-            key=lambda x: x["entry_to_apex_loss"]
+            key=lambda x: x.get(
+                "entry_to_apex_loss",
+                0
+            )
         )
 
         # ------------------------------------------------------
@@ -168,52 +183,89 @@ class AIEngineer:
 
         best_acceleration = max(
             corners,
-            key=lambda x: x["apex_to_exit_gain"]
+            key=lambda x: x.get(
+                "apex_to_exit_gain",
+                0
+            )
+        )
+
+        braking_corner = highest_braking.get(
+            "corner"
+        )
+
+        braking_intensity = highest_braking.get(
+            "braking_intensity",
+            0
+        )
+
+        speed_loss_corner = largest_speed_loss.get(
+            "corner"
+        )
+
+        speed_loss = largest_speed_loss.get(
+            "entry_to_apex_loss",
+            0
+        )
+
+        acceleration_corner = best_acceleration.get(
+            "corner"
+        )
+
+        acceleration_gain = best_acceleration.get(
+            "apex_to_exit_gain",
+            0
         )
 
         return {
-            "total_corners": len(corners),
+
+            "total_corners":
+                len(corners),
 
             "highest_braking_corner": {
-                "corner": highest_braking["corner"],
-                "braking_intensity": highest_braking[
-                    "braking_intensity"
-                ]
+
+                "corner":
+                    braking_corner,
+
+                "braking_intensity":
+                    braking_intensity,
             },
 
             "largest_speed_loss_corner": {
-                "corner": largest_speed_loss["corner"],
-                "speed_loss": largest_speed_loss[
-                    "entry_to_apex_loss"
-                ]
+
+                "corner":
+                    speed_loss_corner,
+
+                "speed_loss":
+                    speed_loss,
             },
 
             "best_acceleration_corner": {
-                "corner": best_acceleration["corner"],
-                "speed_gain": best_acceleration[
-                    "apex_to_exit_gain"
-                ]
+
+                "corner":
+                    acceleration_corner,
+
+                "speed_gain":
+                    acceleration_gain,
             },
 
             "summary": (
-                f"Corner {largest_speed_loss['corner']} "
-                f"has the largest entry-to-apex speed loss "
-                f"({largest_speed_loss['entry_to_apex_loss']:.1f}). "
-                f"Corner {best_acceleration['corner']} produces "
-                f"the strongest exit acceleration with "
-                f"{best_acceleration['apex_to_exit_gain']:.1f} "
-                f"speed gain."
-            )
+                f"Corner {speed_loss_corner} has the largest "
+                f"entry-to-apex speed loss "
+                f"({speed_loss:.1f}). "
+                f"Corner {acceleration_corner} produces the "
+                f"strongest exit acceleration with "
+                f"{acceleration_gain:.1f} speed gain."
+            ),
         }
 
     # ==========================================================
-    # Single Driver Report
+    # SINGLE DRIVER REPORT
     # ==========================================================
 
     def generate_report(self):
 
         # ------------------------------------------------------
-        # Telemetry
+        # TELEMETRY
         # ------------------------------------------------------
 
         telemetry_analysis = TelemetryAnalysis(
@@ -225,7 +277,7 @@ class AIEngineer:
         )
 
         # ------------------------------------------------------
-        # Driver scoring
+        # DRIVER SCORING
         # ------------------------------------------------------
 
         scoring = DriverScoring(
@@ -239,7 +291,7 @@ class AIEngineer:
         )
 
         # ------------------------------------------------------
-        # Recommendations
+        # RECOMMENDATIONS
         # ------------------------------------------------------
 
         recommendation_engine = RecommendationEngine(
@@ -251,7 +303,7 @@ class AIEngineer:
         )
 
         # ------------------------------------------------------
-        # Sector analysis
+        # SECTORS
         # ------------------------------------------------------
 
         sector_analysis = SectorAnalysis(
@@ -263,7 +315,7 @@ class AIEngineer:
         )
 
         # ------------------------------------------------------
-        # Corner analysis
+        # CORNERS
         # ------------------------------------------------------
 
         corners = []
@@ -286,7 +338,7 @@ class AIEngineer:
         )
 
         # ------------------------------------------------------
-        # Engineering summary
+        # ENGINEERING SUMMARY
         # ------------------------------------------------------
 
         engineering_summary = (
@@ -296,7 +348,7 @@ class AIEngineer:
         )
 
         # ------------------------------------------------------
-        # Final report
+        # FINAL REPORT
         # ------------------------------------------------------
 
         return {
@@ -323,11 +375,11 @@ class AIEngineer:
                 engineering_summary,
 
             "recommendations":
-                recommendations
+                recommendations,
         }
 
     # ==========================================================
-    # Driver Comparison Report
+    # DRIVER COMPARISON REPORT
     # ==========================================================
 
     def generate_comparison_report(
@@ -338,11 +390,11 @@ class AIEngineer:
         driver_1_name,
         driver_2_name,
         laps_1,
-        laps_2
+        laps_2,
     ):
 
         # ------------------------------------------------------
-        # Telemetry analysis
+        # TELEMETRY ANALYSIS
         # ------------------------------------------------------
 
         analysis_1 = TelemetryAnalysis(
@@ -354,7 +406,7 @@ class AIEngineer:
         )
 
         # ------------------------------------------------------
-        # Driver scoring
+        # DRIVER SCORING
         # ------------------------------------------------------
 
         scoring_1 = DriverScoring(
@@ -369,7 +421,23 @@ class AIEngineer:
         score_2 = scoring_2.get_score()
 
         # ------------------------------------------------------
-        # Sector analysis
+        # ENGINEERING SUMMARIES
+        # ------------------------------------------------------
+
+        summary_1 = (
+            self._generate_engineering_summary(
+                score_1
+            )
+        )
+
+        summary_2 = (
+            self._generate_engineering_summary(
+                score_2
+            )
+        )
+
+        # ------------------------------------------------------
+        # SECTOR ANALYSIS
         # ------------------------------------------------------
 
         sector_analysis_1 = SectorAnalysis(
@@ -388,44 +456,73 @@ class AIEngineer:
             sector_analysis_2.get_summary()
         )
 
-        sector_comparison = {
+        # ------------------------------------------------------
+        # SAFE SECTOR VALUES
+        # ------------------------------------------------------
 
-            "sector_1": {
-                "driver_1": sectors_1["sector_1"]["fastest"],
-                "driver_2": sectors_2["sector_1"]["fastest"],
-                "delta": round(
-                    sectors_1["sector_1"]["fastest"]
-                    -
-                    sectors_2["sector_1"]["fastest"],
-                    3
-                )
-            },
+        def sector_time(
+            sectors,
+            sector
+        ):
+            value = sectors.get(
+                sector,
+                {}
+            ).get("fastest")
 
-            "sector_2": {
-                "driver_1": sectors_1["sector_2"]["fastest"],
-                "driver_2": sectors_2["sector_2"]["fastest"],
-                "delta": round(
-                    sectors_1["sector_2"]["fastest"]
-                    -
-                    sectors_2["sector_2"]["fastest"],
-                    3
-                )
-            },
+            if value is None:
+                return None
 
-            "sector_3": {
-                "driver_1": sectors_1["sector_3"]["fastest"],
-                "driver_2": sectors_2["sector_3"]["fastest"],
-                "delta": round(
-                    sectors_1["sector_3"]["fastest"]
-                    -
-                    sectors_2["sector_3"]["fastest"],
-                    3
-                )
-            }
-        }
+            return float(value)
 
         # ------------------------------------------------------
-        # Corner comparison
+        # SECTOR COMPARISON
+        # ------------------------------------------------------
+
+        sector_comparison = {}
+
+        for sector_name, sector_key in [
+            ("Sector 1", "sector_1"),
+            ("Sector 2", "sector_2"),
+            ("Sector 3", "sector_3"),
+        ]:
+
+            time_1 = sector_time(
+                sectors_1,
+                sector_key
+            )
+
+            time_2 = sector_time(
+                sectors_2,
+                sector_key
+            )
+
+            delta = None
+
+            if (
+                time_1 is not None
+                and time_2 is not None
+            ):
+                delta = round(
+                    time_1 - time_2,
+                    3
+                )
+
+            sector_comparison[
+                sector_key
+            ] = {
+
+                "driver_1":
+                    time_1,
+
+                "driver_2":
+                    time_2,
+
+                "delta":
+                    delta,
+            }
+
+        # ------------------------------------------------------
+        # CORNER COMPARISON
         # ------------------------------------------------------
 
         corner_comparison_engine = (
@@ -438,43 +535,61 @@ class AIEngineer:
                 telemetry_2,
                 circuit_info,
                 driver_1_name,
-                driver_2_name
+                driver_2_name,
             )
         )
 
         # ------------------------------------------------------
-        # Find biggest sector loss
+        # VALID SECTOR DELTAS
         # ------------------------------------------------------
 
-        sector_deltas = {
+        sector_deltas = {}
 
-            "Sector 1":
-                sector_comparison["sector_1"]["delta"],
+        for sector_key, display_name in [
+            ("sector_1", "Sector 1"),
+            ("sector_2", "Sector 2"),
+            ("sector_3", "Sector 3"),
+        ]:
 
-            "Sector 2":
-                sector_comparison["sector_2"]["delta"],
+            delta = sector_comparison[
+                sector_key
+            ]["delta"]
 
-            "Sector 3":
-                sector_comparison["sector_3"]["delta"]
-        }
+            if delta is not None:
 
-        biggest_loss_sector = max(
-            sector_deltas,
-            key=lambda x: sector_deltas[x]
-        )
-
-        biggest_loss = sector_deltas[
-            biggest_loss_sector
-        ]
+                sector_deltas[
+                    display_name
+                ] = delta
 
         # ------------------------------------------------------
-        # Determine faster driver
+        # BIGGEST ABSOLUTE SECTOR DIFFERENCE
         # ------------------------------------------------------
 
-        score_difference = (
+        biggest_loss_sector = None
+        biggest_loss = None
+
+        if sector_deltas:
+
+            biggest_loss_sector = max(
+                sector_deltas,
+                key=lambda x: abs(
+                    sector_deltas[x]
+                )
+            )
+
+            biggest_loss = sector_deltas[
+                biggest_loss_sector
+            ]
+
+        # ------------------------------------------------------
+        # DETERMINE FASTER DRIVER
+        # ------------------------------------------------------
+
+        score_difference = round(
             score_1["overall_score"]
             -
-            score_2["overall_score"]
+            score_2["overall_score"],
+            2
         )
 
         if score_difference > 0:
@@ -490,59 +605,66 @@ class AIEngineer:
             faster_driver = "Equal"
 
         # ------------------------------------------------------
-        # Engineering diagnosis
+        # ENGINEERING DIAGNOSIS
         # ------------------------------------------------------
 
         diagnosis = []
 
-        if biggest_loss > 0:
+        if (
+            biggest_loss_sector is not None
+            and biggest_loss is not None
+        ):
 
-            diagnosis.append({
+            if biggest_loss > 0:
 
-                "area":
-                    biggest_loss_sector,
+                diagnosis.append({
 
-                "priority":
-                    "High",
+                    "area":
+                        biggest_loss_sector,
 
-                "time_loss":
-                    round(
-                        biggest_loss,
-                        3
+                    "priority":
+                        "High",
+
+                    "time_loss":
+                        round(
+                            biggest_loss,
+                            3
+                        ),
+
+                    "message": (
+                        f"{driver_1_name} loses "
+                        f"{abs(biggest_loss):.3f}s "
+                        f"to {driver_2_name} in "
+                        f"{biggest_loss_sector}."
                     ),
+                })
 
-                "message": (
-                    f"{driver_1_name} loses the most time "
-                    f"to {driver_2_name} in "
-                    f"{biggest_loss_sector}."
-                )
-            })
+            elif biggest_loss < 0:
 
-        elif biggest_loss < 0:
+                diagnosis.append({
 
-            diagnosis.append({
+                    "area":
+                        biggest_loss_sector,
 
-                "area":
-                    biggest_loss_sector,
+                    "priority":
+                        "Low",
 
-                "priority":
-                    "Low",
+                    "time_gain":
+                        round(
+                            abs(biggest_loss),
+                            3
+                        ),
 
-                "time_gain":
-                    round(
-                        abs(biggest_loss),
-                        3
+                    "message": (
+                        f"{driver_1_name} gains "
+                        f"{abs(biggest_loss):.3f}s "
+                        f"on {driver_2_name} in "
+                        f"{biggest_loss_sector}."
                     ),
-
-                "message": (
-                    f"{driver_1_name} is faster than "
-                    f"{driver_2_name} in "
-                    f"{biggest_loss_sector}."
-                )
-            })
+                })
 
         # ------------------------------------------------------
-        # Find corner advantages
+        # CORNER WINS
         # ------------------------------------------------------
 
         driver_1_corner_wins = 0
@@ -550,16 +672,20 @@ class AIEngineer:
 
         for corner in corner_comparison:
 
-            if corner["winner"] == driver_1_name:
+            winner = corner.get(
+                "winner"
+            )
+
+            if winner == driver_1_name:
 
                 driver_1_corner_wins += 1
 
-            elif corner["winner"] == driver_2_name:
+            elif winner == driver_2_name:
 
                 driver_2_corner_wins += 1
 
         # ------------------------------------------------------
-        # Final comparison report
+        # FINAL COMPARISON REPORT
         # ------------------------------------------------------
 
         return {
@@ -576,7 +702,16 @@ class AIEngineer:
                     score_1,
 
                 driver_2_name:
-                    score_2
+                    score_2,
+            },
+
+            "engineering_summary": {
+
+                driver_1_name:
+                    summary_1,
+
+                driver_2_name:
+                    summary_2,
             },
 
             "sector_comparison":
@@ -591,7 +726,7 @@ class AIEngineer:
                     driver_1_corner_wins,
 
                 driver_2_name:
-                    driver_2_corner_wins
+                    driver_2_corner_wins,
             },
 
             "overall": {
@@ -600,12 +735,9 @@ class AIEngineer:
                     faster_driver,
 
                 "score_difference":
-                    round(
-                        score_difference,
-                        2
-                    )
+                    score_difference,
             },
 
             "diagnosis":
-                diagnosis
+                diagnosis,
         }

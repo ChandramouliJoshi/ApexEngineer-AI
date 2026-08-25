@@ -21,31 +21,37 @@ class TelemetryAnalysis(BaseAnalysis):
     # ==========================================================
 
     def get_max_speed(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Speed" not in self.telemetry.columns:
             return 0.0
 
-        return round(
-            float(self.telemetry["Speed"].max()),
-            2
-        )
+        speed = self.telemetry["Speed"].astype(float).dropna()
+
+        if speed.empty:
+            return 0.0
+
+        return round(float(speed.max()), 2)
 
     def get_average_speed(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Speed" not in self.telemetry.columns:
             return 0.0
 
-        return round(
-            float(self.telemetry["Speed"].mean()),
-            2
-        )
+        speed = self.telemetry["Speed"].astype(float).dropna()
+
+        if speed.empty:
+            return 0.0
+
+        return round(float(speed.mean()), 2)
 
     def get_min_speed(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Speed" not in self.telemetry.columns:
             return 0.0
 
-        return round(
-            float(self.telemetry["Speed"].min()),
-            2
-        )
+        speed = self.telemetry["Speed"].astype(float).dropna()
+
+        if speed.empty:
+            return 0.0
+
+        return round(float(speed.min()), 2)
 
     def get_speed_range(self):
         if self.telemetry.empty:
@@ -62,87 +68,116 @@ class TelemetryAnalysis(BaseAnalysis):
     # ==========================================================
 
     def get_max_rpm(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "RPM" not in self.telemetry.columns:
             return 0.0
 
-        return round(
-            float(self.telemetry["RPM"].max()),
-            2
-        )
+        rpm = self.telemetry["RPM"].astype(float).dropna()
+
+        if rpm.empty:
+            return 0.0
+
+        return round(float(rpm.max()), 2)
 
     def get_average_rpm(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "RPM" not in self.telemetry.columns:
             return 0.0
 
-        return round(
-            float(self.telemetry["RPM"].mean()),
-            2
-        )
+        rpm = self.telemetry["RPM"].astype(float).dropna()
+
+        if rpm.empty:
+            return 0.0
+
+        return round(float(rpm.mean()), 2)
 
     # ==========================================================
     # Gear
     # ==========================================================
 
     def get_average_gear(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "nGear" not in self.telemetry.columns:
             return 0.0
 
-        return round(
-            float(self.telemetry["nGear"].mean()),
-            2
-        )
+        gear = self.telemetry["nGear"].astype(float).dropna()
+
+        if gear.empty:
+            return 0.0
+
+        return round(float(gear.mean()), 2)
 
     def get_max_gear(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "nGear" not in self.telemetry.columns:
             return 0
 
-        return int(
-            self.telemetry["nGear"].max()
-        )
+        gear = self.telemetry["nGear"].astype(float).dropna()
+
+        if gear.empty:
+            return 0
+
+        return int(gear.max())
 
     # ==========================================================
     # Distance
     # ==========================================================
 
     def get_total_distance(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Distance" not in self.telemetry.columns:
             return 0.0
 
-        return round(
-            float(self.telemetry["Distance"].max()),
-            2
+        distance = (
+            self.telemetry["Distance"]
+            .astype(float)
+            .dropna()
         )
+
+        if distance.empty:
+            return 0.0
+
+        return round(float(distance.max()), 2)
 
     # ==========================================================
     # Throttle
     # ==========================================================
 
     def get_full_throttle_percentage(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Throttle" not in self.telemetry.columns:
+            return 0.0
+
+        throttle = (
+            self.telemetry["Throttle"]
+            .astype(float)
+            .dropna()
+        )
+
+        if throttle.empty:
             return 0.0
 
         full_throttle = (
-            self.telemetry["Throttle"] >= 99
+            throttle >= 99
         ).sum()
 
         return round(
             (
                 full_throttle /
-                len(self.telemetry)
+                len(throttle)
             ) * 100,
             2
         )
 
     def get_average_throttle(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Throttle" not in self.telemetry.columns:
+            return 0.0
+
+        throttle = (
+            self.telemetry["Throttle"]
+            .astype(float)
+            .dropna()
+        )
+
+        if throttle.empty:
             return 0.0
 
         return round(
-            float(
-                self.telemetry["Throttle"]
-                .astype(float)
-                .mean()
-            ),
+            float(throttle.mean()),
             2
         )
 
@@ -151,32 +186,54 @@ class TelemetryAnalysis(BaseAnalysis):
     # ==========================================================
 
     def get_brake_percentage(self):
-        if self.telemetry.empty:
+        """
+        Returns the percentage of valid telemetry samples
+        where the driver is applying the brakes.
+
+        This is intentionally based on BRAKE ACTIVITY rather
+        than summing brake values.
+
+        FastF1 brake data can be boolean or numeric depending
+        on the source/session, so treating every non-zero
+        value as an active braking sample is safer.
+        """
+
+        if self.telemetry.empty or "Brake" not in self.telemetry.columns:
             return 0.0
 
-        braking = (
+        brake = (
             self.telemetry["Brake"]
             .astype(float)
-            .sum()
+            .fillna(0)
         )
+
+        if brake.empty:
+            return 0.0
+
+        braking_samples = (
+            brake > 0
+        ).sum()
 
         return round(
             (
-                braking /
-                len(self.telemetry)
+                braking_samples /
+                len(brake)
             ) * 100,
             2
         )
 
     def get_braking_samples(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Brake" not in self.telemetry.columns:
             return 0
 
+        brake = (
+            self.telemetry["Brake"]
+            .astype(float)
+            .fillna(0)
+        )
+
         return int(
-            (
-                self.telemetry["Brake"]
-                .astype(float) > 0
-            ).sum()
+            (brake > 0).sum()
         )
 
     # ==========================================================
@@ -184,17 +241,26 @@ class TelemetryAnalysis(BaseAnalysis):
     # ==========================================================
 
     def get_drs_usage(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "DRS" not in self.telemetry.columns:
+            return 0.0
+
+        drs = (
+            self.telemetry["DRS"]
+            .astype(float)
+            .fillna(0)
+        )
+
+        if drs.empty:
             return 0.0
 
         drs_active = (
-            self.telemetry["DRS"] > 0
+            drs > 0
         ).sum()
 
         return round(
             (
                 drs_active /
-                len(self.telemetry)
+                len(drs)
             ) * 100,
             2
         )
@@ -204,15 +270,20 @@ class TelemetryAnalysis(BaseAnalysis):
     # ==========================================================
 
     def get_speed_std(self):
-        if self.telemetry.empty:
+        if self.telemetry.empty or "Speed" not in self.telemetry.columns:
+            return 0.0
+
+        speed = (
+            self.telemetry["Speed"]
+            .astype(float)
+            .dropna()
+        )
+
+        if len(speed) < 2:
             return 0.0
 
         return round(
-            float(
-                self.telemetry["Speed"]
-                .astype(float)
-                .std()
-            ),
+            float(speed.std()),
             2
         )
 
@@ -229,7 +300,9 @@ class TelemetryAnalysis(BaseAnalysis):
         if average_speed <= 0:
             return 0.0
 
-        speed_std = self.get_speed_std()
+        speed_std = (
+            self.get_speed_std()
+        )
 
         variation = (
             speed_std /
@@ -284,18 +357,23 @@ class TelemetryAnalysis(BaseAnalysis):
 
             "speed": {
                 "max": self.get_max_speed(),
+
                 "average": self.get_average_speed(),
+
                 "minimum": self.get_min_speed(),
+
                 "range": self.get_speed_range()
             },
 
             "rpm": {
                 "max": self.get_max_rpm(),
+
                 "average": self.get_average_rpm()
             },
 
             "gear": {
                 "max": self.get_max_gear(),
+
                 "average": self.get_average_gear()
             },
 
@@ -307,6 +385,7 @@ class TelemetryAnalysis(BaseAnalysis):
                 "full_throttle": (
                     self.get_full_throttle_percentage()
                 ),
+
                 "average": (
                     self.get_average_throttle()
                 )
@@ -316,6 +395,7 @@ class TelemetryAnalysis(BaseAnalysis):
                 "usage": (
                     self.get_brake_percentage()
                 ),
+
                 "samples": (
                     self.get_braking_samples()
                 )

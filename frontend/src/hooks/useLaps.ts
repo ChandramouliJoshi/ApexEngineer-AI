@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react"
 import axios from "axios"
 
@@ -35,6 +36,131 @@ interface UseLapsResult {
 
 const API_URL = "http://127.0.0.1:8000"
 
+function toNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") {
+    return null
+  }
+
+  const number = Number(value)
+
+  return Number.isFinite(number) ? number : null
+}
+
+function toBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") {
+    return value
+  }
+
+  if (typeof value === "string") {
+    return value.toLowerCase() === "true"
+  }
+
+  return Boolean(value)
+}
+
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const detail = error.response?.data?.detail
+
+    if (typeof detail === "string") {
+      return detail
+    }
+
+    if (
+      detail &&
+      typeof detail === "object" &&
+      typeof detail.message === "string"
+    ) {
+      return detail.message
+    }
+
+    if (typeof error.message === "string") {
+      return error.message
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  return "Unable to load lap data."
+}
+
+function normaliseLap(row: any): LapData {
+  return {
+    LapNumber: Number(
+      row?.LapNumber ??
+      row?.lap_number ??
+      0
+    ),
+
+    LapTime: toNumber(
+      row?.LapTime ??
+      row?.lap_time
+    ),
+
+    Sector1Time: toNumber(
+      row?.Sector1Time ??
+      row?.sector1_time
+    ),
+
+    Sector2Time: toNumber(
+      row?.Sector2Time ??
+      row?.sector2_time
+    ),
+
+    Sector3Time: toNumber(
+      row?.Sector3Time ??
+      row?.sector3_time
+    ),
+
+    Compound:
+      row?.Compound ??
+      row?.compound ??
+      null,
+
+    TyreLife: toNumber(
+      row?.TyreLife ??
+      row?.tyre_life
+    ),
+
+    Stint: toNumber(
+      row?.Stint ??
+      row?.stint
+    ),
+
+    Position: toNumber(
+      row?.Position ??
+      row?.position
+    ),
+
+    SpeedFL: toNumber(
+      row?.SpeedFL ??
+      row?.speed_fl
+    ),
+
+    SpeedST: toNumber(
+      row?.SpeedST ??
+      row?.speed_st
+    ),
+
+    IsPersonalBest: toBoolean(
+      row?.IsPersonalBest ??
+      row?.is_personal_best
+    ),
+
+    Deleted: toBoolean(
+      row?.Deleted ??
+      row?.deleted
+    ),
+
+    IsAccurate: toBoolean(
+      row?.IsAccurate ??
+      row?.is_accurate
+    ),
+  }
+}
+
 export function useLaps({
   year,
   grandPrix,
@@ -42,18 +168,15 @@ export function useLaps({
   sessionType,
   limit = 20,
 }: UseLapsParams): UseLapsResult {
-
   const [laps, setLaps] = useState<LapData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
 
   useEffect(() => {
-
     let cancelled = false
 
     async function fetchLaps() {
-
       try {
         setLoading(true)
         setError(null)
@@ -84,102 +207,29 @@ export function useLaps({
               ? payload.data
               : []
 
-        const normalised: LapData[] = rows
-          .map((row: any): LapData => ({
-            LapNumber: Number(
-              row.LapNumber ??
-              row.lap_number ??
-              0
-            ),
-
-            LapTime:
-              row.LapTime ??
-              row.lap_time ??
-              null,
-
-            Sector1Time:
-              row.Sector1Time ??
-              row.sector1_time ??
-              null,
-
-            Sector2Time:
-              row.Sector2Time ??
-              row.sector2_time ??
-              null,
-
-            Sector3Time:
-              row.Sector3Time ??
-              row.sector3_time ??
-              null,
-
-            Compound:
-              row.Compound ??
-              row.compound ??
-              null,
-
-            TyreLife:
-              row.TyreLife ??
-              row.tyre_life ??
-              null,
-
-            Stint:
-              row.Stint ??
-              row.stint ??
-              null,
-
-            Position:
-              row.Position ??
-              row.position ??
-              null,
-
-            SpeedFL:
-              row.SpeedFL ??
-              row.speed_fl ??
-              null,
-
-            SpeedST:
-              row.SpeedST ??
-              row.speed_st ??
-              null,
-
-            IsPersonalBest: Boolean(
-              row.IsPersonalBest ??
-              row.is_personal_best ??
-              false
-            ),
-
-            Deleted: Boolean(
-              row.Deleted ??
-              row.deleted ??
-              false
-            ),
-
-            IsAccurate: Boolean(
-              row.IsAccurate ??
-              row.is_accurate ??
-              false
-            ),
-          }))
+        const normalised = rows
+          .map(normaliseLap)
           .filter(
             (lap: LapData) =>
-              Number.isFinite(lap.LapNumber)
+              Number.isFinite(lap.LapNumber) &&
+              lap.LapNumber > 0
           )
           .sort(
             (a: LapData, b: LapData) =>
-              b.LapNumber - a.LapNumber
+              a.LapNumber - b.LapNumber
           )
 
         setLaps(normalised)
 
+        const backendTotal = Number(payload?.total)
+
         setTotal(
-          Number(
-            payload?.total ??
-            normalised.length
-          )
+          Number.isFinite(backendTotal)
+            ? backendTotal
+            : normalised.length
         )
 
-      } catch (err: any) {
-
+      } catch (err: unknown) {
         if (cancelled) return
 
         console.error(
@@ -187,20 +237,16 @@ export function useLaps({
           err
         )
 
-        setError(
-          err?.response?.data?.detail ??
-          err?.message ??
-          "Unable to load lap data."
-        )
+        setError(getErrorMessage(err))
+
+        setLaps([])
+        setTotal(0)
 
       } finally {
-
         if (!cancelled) {
           setLoading(false)
         }
-
       }
-
     }
 
     fetchLaps()
@@ -208,7 +254,6 @@ export function useLaps({
     return () => {
       cancelled = true
     }
-
   }, [
     year,
     grandPrix,

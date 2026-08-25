@@ -13,8 +13,13 @@ import {
   Zap,
 } from "lucide-react"
 
+import { motion } from "framer-motion"
 import { NavLink } from "react-router-dom"
 
+interface SidebarProps {
+  mobileOpen: boolean
+  onClose: () => void
+}
 
 const navigation = [
   {
@@ -124,9 +129,32 @@ const navigation = [
 ]
 
 
-function Sidebar() {
+function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-slate-800 bg-slate-950">
+    <>
+      <motion.button
+        type="button"
+        aria-label="Close navigation"
+        onClick={onClose}
+        initial={false}
+        animate={{ opacity: mobileOpen ? 1 : 0 }}
+        className={`fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+      />
+      <motion.aside
+      initial={{
+        x: -24,
+        opacity: 0,
+      }}
+      animate={{
+        x: 0,
+        opacity: 1,
+      }}
+      transition={{
+        duration: 0.45,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+        className={`fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-slate-800 bg-slate-950/95 shadow-[18px_0_60px_rgba(0,0,0,0.24)] backdrop-blur-xl ${mobileOpen ? "max-lg:translate-x-0" : "max-lg:-translate-x-full"}`}
+      >
 
       {/* Brand */}
 
@@ -134,9 +162,20 @@ function Sidebar() {
 
         <div className="flex items-center gap-3">
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-black text-slate-950">
+          <motion.div
+            whileHover={{
+              rotate: -6,
+              scale: 1.06,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 420,
+              damping: 24,
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-black text-slate-950 shadow-[0_0_24px_rgba(255,255,255,0.14)]"
+          >
             AE
-          </div>
+          </motion.div>
 
           <div>
 
@@ -163,35 +202,53 @@ function Sidebar() {
           Analysis
         </p>
 
-        {navigation.map((item) => {
+        {navigation.map((item, index) => {
 
           const Icon = item.icon
 
           return (
-            <NavLink
+            <motion.div
               key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                [
-                  "group flex items-center gap-3 rounded-lg border-l-2 px-3 py-2.5 text-sm transition-all duration-200",
-                  isActive
-                    ? `${item.active} text-white`
-                    : `border-transparent text-slate-500 hover:bg-slate-900 ${item.hover}`,
-                ].join(" ")
-              }
+              initial={{
+                opacity: 0,
+                x: -10,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+              }}
+              transition={{
+                delay: 0.05 + index * 0.025,
+                duration: 0.28,
+              }}
             >
+              <NavLink
+                onClick={onClose}
+                to={item.path}
+                className={({ isActive }) =>
+                  [
+                    "group relative flex items-center gap-3 overflow-hidden rounded-lg border-l-2 px-3 py-2.5 text-sm transition-all duration-200",
+                    isActive
+                      ? `${item.active} text-white shadow-[0_0_22px_rgba(15,23,42,0.55)]`
+                      : `border-transparent text-slate-500 hover:bg-slate-900 ${item.hover}`,
+                  ].join(" ")
+                }
+              >
 
-              <Icon
-                size={17}
-                strokeWidth={1.8}
-                className={`${item.color} transition-transform duration-200 group-hover:scale-110`}
-              />
+                <span className="absolute inset-y-0 left-0 w-px -translate-y-full bg-current opacity-0 transition duration-500 group-hover:translate-y-0 group-hover:opacity-40" />
 
-              <span className="font-medium">
-                {item.name}
-              </span>
+                <Icon
+                  size={17}
+                  strokeWidth={1.8}
+                  className={`${item.color} transition-transform duration-200 group-hover:scale-110`}
+                />
 
-            </NavLink>
+                <span className="font-medium">
+                  {item.name}
+                </span>
+
+              </NavLink>
+            </motion.div>
           )
         })}
 
@@ -202,14 +259,30 @@ function Sidebar() {
 
       <div className="border-t border-slate-800 p-4">
 
-        <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+        <motion.div
+          whileHover={{
+            y: -2,
+            borderColor: "rgba(52,211,153,0.36)",
+          }}
+          className="rounded-lg border border-slate-800 bg-slate-900/50 p-3"
+        >
 
           <div className="flex items-center gap-2">
 
-            <Radio
-              size={13}
-              className="text-emerald-400"
-            />
+            <motion.div
+              animate={{
+                opacity: [0.65, 1, 0.65],
+              }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+              }}
+            >
+              <Radio
+                size={13}
+                className="text-emerald-400"
+              />
+            </motion.div>
 
             <span className="text-xs font-medium text-slate-300">
               Backend Online
@@ -217,11 +290,12 @@ function Sidebar() {
 
           </div>          
 
-        </div>
+        </motion.div>
 
       </div>
 
-    </aside>
+      </motion.aside>
+    </>
   )
 }
 

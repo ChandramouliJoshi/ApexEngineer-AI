@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import {
@@ -165,6 +166,10 @@ function formatNumber(value: number | null, decimals = 0) {
 }
 
 function formatDistance(value: number) {
+  if (!Number.isFinite(value)) {
+    return "—"
+  }
+
   if (value >= 1000) {
     return `${(value / 1000).toFixed(2)} km`
   }
@@ -186,9 +191,7 @@ function TelemetryTooltip({
 
   return (
     <div className="min-w-[180px] rounded-xl border border-cyan-400/30 bg-[#020617]/95 p-4 shadow-[0_0_35px_rgba(34,211,238,0.12)] backdrop-blur-xl">
-
       <div className="flex items-center justify-between gap-5">
-
         <span className="font-mono text-[7px] font-black uppercase tracking-[0.2em] text-slate-600">
           TRACK DISTANCE
         </span>
@@ -197,7 +200,6 @@ function TelemetryTooltip({
           size={11}
           className="text-cyan-400"
         />
-
       </div>
 
       <p className="mt-1 font-mono text-sm font-black text-slate-100">
@@ -212,7 +214,7 @@ function TelemetryTooltip({
       >
         {formatNumber(
           Number(point?.[metric.key]),
-          1
+          1,
         )}
 
         <span className="ml-2 text-[8px] uppercase tracking-widest text-slate-600">
@@ -247,9 +249,7 @@ function SectionHeader({
 
   return (
     <div className="flex items-start justify-between gap-4">
-
       <div className="flex items-start gap-3">
-
         <div
           className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${
             accent === "orange"
@@ -264,7 +264,6 @@ function SectionHeader({
         </div>
 
         <div>
-
           <h2 className="font-mono text-[11px] font-black uppercase tracking-[0.18em] text-slate-100">
             {title}
           </h2>
@@ -274,9 +273,7 @@ function SectionHeader({
               {subtitle}
             </p>
           )}
-
         </div>
-
       </div>
 
       {right}
@@ -285,7 +282,6 @@ function SectionHeader({
 }
 
 export default function Telemetry() {
-
   const [year, setYear] = useState(2025)
   const [grandPrix, setGrandPrix] =
     useState("Monaco")
@@ -310,11 +306,10 @@ export default function Telemetry() {
 
   const selectedMetric =
     METRICS.find(
-      (item) => item.key === metric
+      (item) => item.key === metric,
     ) ?? METRICS[0]
 
   const stats = useMemo(() => {
-
     if (!data.length) {
       return {
         maxSpeed: null,
@@ -343,7 +338,7 @@ export default function Telemetry() {
     const avgSpeed = speeds.length
       ? speeds.reduce(
           (sum, value) => sum + value,
-          0
+          0,
         ) / speeds.length
       : null
 
@@ -355,7 +350,7 @@ export default function Telemetry() {
       data.length > 0
         ? (data.filter(
             (point) =>
-              point.Throttle >= 95
+              point.Throttle >= 95,
           ).length /
             data.length) *
           100
@@ -365,7 +360,7 @@ export default function Telemetry() {
       data.length > 0
         ? (data.filter(
             (point) =>
-              point.Brake > 10
+              point.Brake > 10,
           ).length /
             data.length) *
           100
@@ -375,7 +370,7 @@ export default function Telemetry() {
       data.length > 0
         ? (data.filter(
             (point) =>
-              point.DRS > 0
+              point.DRS > 0,
           ).length /
             data.length) *
           100
@@ -385,7 +380,7 @@ export default function Telemetry() {
       maxSpeed !== null
         ? data.find(
             (point) =>
-              point.Speed === maxSpeed
+              point.Speed === maxSpeed,
           )
         : null
 
@@ -401,11 +396,9 @@ export default function Telemetry() {
         data[data.length - 1]?.Distance ??
         0,
     }
-
   }, [data])
 
   const chartData = useMemo(() => {
-
     if (data.length <= 700) {
       return data
     }
@@ -415,24 +408,36 @@ export default function Telemetry() {
 
     return data.filter(
       (_, index) =>
-        index % step === 0
+        index % step === 0,
     )
-
   }, [data])
 
   const driverName =
     DRIVERS.find(
-      (item) => item.code === driver
+      (item) => item.code === driver,
     )?.name ?? driver
 
   const sessionName =
     SESSIONS.find(
       (item) =>
-        item.value === sessionType
+        item.value === sessionType,
     )?.label ?? sessionType
 
-  const insights = useMemo(() => {
+  const maxGear = useMemo(() => {
+    const gears = data
+      .map((point) => point.Gear)
+      .filter(
+        (gear) =>
+          Number.isFinite(gear) &&
+          gear > 0,
+      )
 
+    return gears.length
+      ? Math.max(...gears)
+      : null
+  }, [data])
+
+  const insights = useMemo(() => {
     if (!data.length) {
       return []
     }
@@ -440,32 +445,20 @@ export default function Telemetry() {
     const heavyBrakingPoints =
       data.filter(
         (point) =>
-          point.Brake >= 80
+          point.Brake >= 80,
       ).length
 
     const fullThrottlePoints =
       data.filter(
         (point) =>
-          point.Throttle >= 95
+          point.Throttle >= 95,
       ).length
 
     const drsPoints =
       data.filter(
         (point) =>
-          point.DRS > 0
+          point.DRS > 0,
       ).length
-
-    const gears = data
-      .map((point) => point.Gear)
-      .filter(
-        (gear) =>
-          Number.isFinite(gear) &&
-          gear > 0
-      )
-
-    const highestGear = gears.length
-      ? Math.max(...gears)
-      : null
 
     return [
       {
@@ -478,7 +471,7 @@ export default function Telemetry() {
         detail:
           stats.maxSpeedPoint
             ? `PEAK @ ${formatDistance(
-                stats.maxSpeedPoint.Distance
+                stats.maxSpeedPoint.Distance,
               )}`
             : "NO SPEED PEAK",
         tone: "cyan",
@@ -519,14 +512,13 @@ export default function Telemetry() {
               ).toFixed(1)}%`
             : "—",
         detail:
-          highestGear !== null
-            ? `PEAK GEAR ${highestGear}`
+          maxGear !== null
+            ? `PEAK GEAR ${maxGear}`
             : "NO GEAR DATA",
         tone: "orange",
       },
     ]
-
-  }, [data, stats])
+  }, [data, stats, maxGear])
 
   const toneMap: Record<
     string,
@@ -579,20 +571,16 @@ export default function Telemetry() {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#020617] text-slate-200">
-
+    <div className="w-full text-slate-200">
       {/* =====================================================
           TOP SESSION BAR
       ====================================================== */}
 
       <div className="relative border-b border-slate-800/80 bg-[#020617]">
-
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-cyan-400/30 via-transparent to-orange-400/20" />
 
-        <div className="flex items-center justify-between px-6 py-4">
-
+        <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-
             <p className="font-mono text-[8px] font-black uppercase tracking-[0.25em] text-slate-600">
               SESSION
             </p>
@@ -601,61 +589,48 @@ export default function Telemetry() {
               {year} {grandPrix} Grand Prix ·{" "}
               {sessionName}
             </p>
-
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-emerald-400/10 bg-emerald-400/[0.035] px-4 py-2">
-
+          <div className="flex w-fit items-center gap-2 rounded-full border border-emerald-400/10 bg-emerald-400/[0.035] px-4 py-2">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
 
             <span className="font-mono text-[9px] font-black uppercase tracking-wider text-slate-400">
               Engineering System Online
             </span>
-
           </div>
-
         </div>
       </div>
 
-      <main className="mx-auto max-w-[1700px] px-6 py-8">
-
+      <main className="mx-auto max-w-[1700px] px-4 py-6 sm:px-6 sm:py-8">
         {/* =====================================================
             HERO
         ====================================================== */}
 
         <section className="relative mb-7 overflow-hidden rounded-2xl border border-slate-800/90 bg-[#030817]">
-
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(34,211,238,0.08),transparent_30%),radial-gradient(circle_at_90%_80%,rgba(251,146,60,0.05),transparent_25%)]" />
 
-          <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 border-l border-b border-cyan-400/10" />
+          <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 border-b border-l border-cyan-400/10" />
 
-          <div className="relative flex flex-col gap-8 p-7 xl:flex-row xl:items-end xl:justify-between">
-
+          <div className="relative flex flex-col gap-8 p-5 sm:p-7 xl:flex-row xl:items-end xl:justify-between">
             <div>
-
               <div className="mb-3 flex items-center gap-2">
-
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-400/[0.05]">
-
                   <Activity
                     size={13}
                     className="text-cyan-300"
                   />
-
                 </div>
 
                 <span className="font-mono text-[9px] font-black uppercase tracking-[0.3em] text-cyan-400">
                   ApexEngineer AI
                 </span>
-
               </div>
 
-              <h1 className="font-mono text-3xl font-black uppercase tracking-tight text-slate-100 md:text-4xl">
+              <h1 className="font-mono text-2xl font-black uppercase tracking-tight text-slate-100 sm:text-3xl md:text-4xl">
                 Telemetry Intelligence
               </h1>
 
               <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-slate-600">
-
                 <span>{year}</span>
 
                 <span className="text-slate-800">
@@ -677,31 +652,25 @@ export default function Telemetry() {
                 </span>
 
                 <span>{sessionType}</span>
-
               </div>
 
               <p className="mt-3 max-w-xl font-mono text-[8px] uppercase tracking-[0.13em] text-slate-600">
                 DRIVER TELEMETRY · SPEED · THROTTLE · BRAKE · POWERTRAIN
               </p>
-
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-slate-800/80 rounded-xl border border-slate-800/80 bg-slate-950/50">
-
-              <div className="min-w-[90px] px-5 py-4">
-
+            <div className="grid w-full grid-cols-3 divide-x divide-slate-800/80 rounded-xl border border-slate-800/80 bg-slate-950/50 xl:w-auto">
+              <div className="min-w-0 px-3 py-4 sm:min-w-[90px] sm:px-5">
                 <p className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-600">
                   DRIVER
                 </p>
 
-                <p className="mt-1 font-mono text-xl font-black text-cyan-300">
+                <p className="mt-1 truncate font-mono text-xl font-black text-cyan-300">
                   {driver}
                 </p>
-
               </div>
 
-              <div className="min-w-[100px] px-5 py-4">
-
+              <div className="min-w-0 px-3 py-4 sm:min-w-[100px] sm:px-5">
                 <p className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-600">
                   SAMPLES
                 </p>
@@ -709,25 +678,20 @@ export default function Telemetry() {
                 <p className="mt-1 font-mono text-xl font-black text-slate-100">
                   {data.length.toLocaleString()}
                 </p>
-
               </div>
 
-              <div className="min-w-[115px] px-5 py-4">
-
+              <div className="min-w-0 px-3 py-4 sm:min-w-[115px] sm:px-5">
                 <p className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-600">
                   DISTANCE
                 </p>
 
-                <p className="mt-1 font-mono text-xl font-black text-orange-300">
+                <p className="mt-1 truncate font-mono text-xl font-black text-orange-300">
                   {formatDistance(
-                    stats.distance
+                    stats.distance,
                   )}
                 </p>
-
               </div>
-
             </div>
-
           </div>
         </section>
 
@@ -736,18 +700,15 @@ export default function Telemetry() {
         ====================================================== */}
 
         <section className="group relative overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-950/65 shadow-[0_10px_50px_rgba(0,0,0,0.18)]">
-
           <div className="absolute left-0 top-0 h-px w-32 bg-gradient-to-r from-cyan-400 to-transparent" />
 
-          <div className="p-6">
-
+          <div className="p-5 sm:p-6">
             <SectionHeader
               icon={Settings2}
               title="Telemetry Parameters"
               subtitle="Configure analysis target"
               right={
                 <div className="hidden items-center gap-2 md:flex">
-
                   <Signal
                     size={11}
                     className="text-emerald-400"
@@ -756,77 +717,65 @@ export default function Telemetry() {
                   <span className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-600">
                     STREAM READY
                   </span>
-
                 </div>
               }
             />
 
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
               {[
                 {
                   label: "SEASON",
                   value: year,
-                  setter: (
-                    value: string
-                  ) =>
-                    setYear(
-                      Number(value)
-                    ),
+                  setter: (value: string) =>
+                    setYear(Number(value)),
                   options: YEARS.map(
                     (item) => ({
                       value: item,
                       label: item,
-                    })
+                    }),
                   ),
                 },
                 {
                   label: "GRAND PRIX",
                   value: grandPrix,
-                  setter:
-                    setGrandPrix,
+                  setter: setGrandPrix,
                   options:
                     GRAND_PRIXES.map(
                       (item) => ({
                         value: item,
                         label: item,
-                      })
+                      }),
                     ),
                 },
                 {
                   label: "DRIVER",
                   value: driver,
                   setter: setDriver,
-                  options:
-                    DRIVERS.map(
-                      (item) => ({
-                        value: item.code,
-                        label: `${item.code} · ${item.name}`,
-                      })
-                    ),
+                  options: DRIVERS.map(
+                    (item) => ({
+                      value: item.code,
+                      label: `${item.code} · ${item.name}`,
+                    }),
+                  ),
                 },
                 {
                   label: "SESSION",
                   value: sessionType,
-                  setter:
-                    setSessionType,
+                  setter: setSessionType,
                   options:
                     SESSIONS.map(
                       (item) => ({
                         value: item.value,
                         label: item.label,
-                      })
+                      }),
                     ),
                 },
               ].map((control) => (
-
                 <label
                   key={control.label}
                   className="group/control"
                 >
-
                   <span className="mb-2 flex items-center justify-between font-mono text-[7px] font-black uppercase tracking-[0.18em] text-slate-600">
-
                     {control.label}
 
                     <span className="opacity-0 transition group-hover/control:opacity-100">
@@ -835,26 +784,23 @@ export default function Telemetry() {
                         className="text-cyan-400"
                       />
                     </span>
-
                   </span>
 
                   <div className="relative">
-
                     <select
                       value={control.value}
                       onChange={(event) =>
                         control.setter(
-                          event.target.value
+                          event.target.value,
                         )
                       }
                       className="w-full appearance-none rounded-lg border border-slate-800 bg-[#020617] px-4 py-3.5 pr-10 font-mono text-[10px] font-bold text-slate-200 outline-none transition hover:border-cyan-400/30 hover:bg-slate-950 focus:border-cyan-400/60 focus:shadow-[0_0_20px_rgba(34,211,238,0.06)]"
                     >
-
                       {control.options.map(
                         (option) => (
                           <option
                             key={String(
-                              option.value
+                              option.value,
                             )}
                             value={
                               option.value
@@ -862,24 +808,18 @@ export default function Telemetry() {
                           >
                             {option.label}
                           </option>
-                        )
+                        ),
                       )}
-
                     </select>
 
                     <ChevronRight
                       size={12}
                       className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-slate-600"
                     />
-
                   </div>
-
                 </label>
-
               ))}
-
             </div>
-
           </div>
         </section>
 
@@ -899,28 +839,22 @@ export default function Telemetry() {
             }}
             className="mt-5 rounded-xl border border-red-500/30 bg-red-500/[0.045] p-5"
           >
-
             <div className="flex items-start gap-3">
-
               <Flag
                 size={15}
-                className="mt-0.5 text-red-400"
+                className="mt-0.5 shrink-0 text-red-400"
               />
 
-              <div>
-
+              <div className="min-w-0">
                 <p className="font-mono text-[9px] font-black uppercase tracking-widest text-red-300">
                   Telemetry Unavailable
                 </p>
 
-                <p className="mt-2 font-mono text-[9px] text-red-200/70">
+                <p className="mt-2 break-words font-mono text-[9px] text-red-200/70">
                   {error}
                 </p>
-
               </div>
-
             </div>
-
           </motion.div>
         )}
 
@@ -928,8 +862,7 @@ export default function Telemetry() {
             KPI
         ====================================================== */}
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           {[
             {
               label: "MAX SPEED",
@@ -964,7 +897,7 @@ export default function Telemetry() {
               value:
                 stats.maxRPM !== null
                   ? `${Math.round(
-                      stats.maxRPM
+                      stats.maxRPM,
                     ).toLocaleString()}`
                   : "—",
               unit: "RPM",
@@ -1018,7 +951,6 @@ export default function Telemetry() {
                 "hover:shadow-[0_0_30px_rgba(251,146,60,0.08)]",
             },
           ].map((card, index) => {
-
             const Icon = card.icon
 
             return (
@@ -1033,19 +965,16 @@ export default function Telemetry() {
                   y: 0,
                 }}
                 transition={{
-                  delay:
-                    index * 0.04,
+                  delay: index * 0.04,
                 }}
                 whileHover={{
                   y: -4,
                 }}
                 className={`group relative overflow-hidden rounded-xl border ${card.border} bg-slate-950/75 p-5 transition duration-300 hover:bg-slate-900/80 ${card.glow}`}
               >
-
                 <div className="absolute bottom-0 left-0 h-px w-0 bg-current opacity-50 transition-all duration-500 group-hover:w-full" />
 
                 <div className="flex items-center justify-between">
-
                   <span className="font-mono text-[7px] font-black uppercase tracking-[0.18em] text-slate-600">
                     {card.label}
                   </span>
@@ -1054,11 +983,9 @@ export default function Telemetry() {
                     size={14}
                     className={`${card.color} opacity-60 transition duration-300 group-hover:scale-110 group-hover:opacity-100`}
                   />
-
                 </div>
 
                 <div className="mt-5 flex items-end gap-2">
-
                   <span
                     className={`font-mono text-2xl font-black tracking-tight ${card.color}`}
                   >
@@ -1068,13 +995,10 @@ export default function Telemetry() {
                   <span className="pb-1 font-mono text-[7px] font-black uppercase tracking-widest text-slate-600">
                     {card.unit}
                   </span>
-
                 </div>
-
               </motion.div>
             )
           })}
-
         </div>
 
         {/* =====================================================
@@ -1082,28 +1006,20 @@ export default function Telemetry() {
         ====================================================== */}
 
         <section className="mt-5 overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-950/70 shadow-[0_15px_60px_rgba(0,0,0,0.2)]">
-
-          <div className="relative border-b border-slate-800/80 p-6">
-
+          <div className="relative border-b border-slate-800/80 p-5 sm:p-6">
             <div className="absolute left-0 top-0 h-px w-40 bg-gradient-to-r from-cyan-400 to-transparent" />
 
             <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-
               <div>
-
                 <div className="flex items-center gap-3">
-
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-400/25 bg-cyan-400/[0.05]">
-
                     <Activity
                       size={14}
                       className="text-cyan-300"
                     />
-
                   </div>
 
                   <div>
-
                     <h2 className="font-mono text-[11px] font-black uppercase tracking-[0.18em] text-slate-100">
                       Telemetry Trace
                     </h2>
@@ -1113,17 +1029,12 @@ export default function Telemetry() {
                       {grandPrix} ·{" "}
                       {sessionName}
                     </p>
-
                   </div>
-
                 </div>
-
               </div>
 
               <div className="flex flex-wrap gap-2">
-
                 {METRICS.map((item) => {
-
                   const Icon = item.icon
                   const active =
                     item.key === metric
@@ -1155,7 +1066,6 @@ export default function Telemetry() {
                           : undefined
                       }
                     >
-
                       {active && (
                         <span
                           className="absolute bottom-0 left-0 right-0 h-px"
@@ -1169,26 +1079,18 @@ export default function Telemetry() {
                       <Icon size={10} />
 
                       {item.label}
-
                     </motion.button>
                   )
                 })}
-
               </div>
-
             </div>
-
           </div>
 
-          <div className="p-4 md:p-6">
-
+          <div className="p-3 sm:p-4 md:p-6">
             {loading ? (
-              <div className="flex h-[460px] items-center justify-center">
-
+              <div className="flex h-[360px] items-center justify-center sm:h-[460px]">
                 <div className="text-center">
-
                   <div className="relative mx-auto h-10 w-10">
-
                     <div className="absolute inset-0 animate-ping rounded-full border border-cyan-400/20" />
 
                     <div className="absolute inset-1 animate-spin rounded-full border-2 border-slate-800 border-t-cyan-400" />
@@ -1197,21 +1099,16 @@ export default function Telemetry() {
                       size={12}
                       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-400"
                     />
-
                   </div>
 
                   <p className="mt-5 font-mono text-[8px] font-black uppercase tracking-[0.2em] text-slate-600">
                     Loading telemetry stream
                   </p>
-
                 </div>
-
               </div>
             ) : data.length === 0 ? (
-              <div className="flex h-[460px] items-center justify-center">
-
+              <div className="flex h-[360px] items-center justify-center sm:h-[460px]">
                 <div className="text-center">
-
                   <Activity
                     size={30}
                     className="mx-auto text-slate-700"
@@ -1222,30 +1119,26 @@ export default function Telemetry() {
                   </p>
 
                   <p className="mt-2 font-mono text-[8px] text-slate-700">
-                    Try another driver, session or Grand Prix.
+                    Try another driver,
+                    session or Grand Prix.
                   </p>
-
                 </div>
-
               </div>
             ) : (
-              <div className="h-[460px]">
-
+              <div className="h-[360px] sm:h-[460px]">
                 <ResponsiveContainer
                   width="100%"
                   height="100%"
                 >
-
                   <LineChart
                     data={chartData}
                     margin={{
                       top: 20,
-                      right: 20,
-                      left: 5,
+                      right: 10,
+                      left: 0,
                       bottom: 15,
                     }}
                   >
-
                     <CartesianGrid
                       strokeDasharray="4 6"
                       stroke="rgba(148,163,184,0.065)"
@@ -1261,7 +1154,7 @@ export default function Telemetry() {
                       ]}
                       tickFormatter={(value) =>
                         `${Math.round(
-                          value
+                          value,
                         )}m`
                       }
                       tick={{
@@ -1288,7 +1181,7 @@ export default function Telemetry() {
                       }}
                       axisLine={false}
                       tickLine={false}
-                      width={60}
+                      width={55}
                       domain={[
                         "auto",
                         "auto",
@@ -1329,24 +1222,17 @@ export default function Telemetry() {
                       }}
                       isAnimationActive={false}
                     />
-
                   </LineChart>
-
                 </ResponsiveContainer>
-
               </div>
             )}
-
           </div>
 
           {!loading &&
             data.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/70 px-6 py-3">
-
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/70 px-5 py-3 sm:px-6">
                 <div className="flex items-center gap-5">
-
                   <div className="flex items-center gap-2">
-
                     <span
                       className="h-1.5 w-1.5 rounded-full"
                       style={{
@@ -1359,28 +1245,22 @@ export default function Telemetry() {
                     <span className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-600">
                       {selectedMetric.label}
                     </span>
-
                   </div>
 
                   <div className="hidden items-center gap-2 sm:flex">
-
                     <span className="h-px w-5 border-t border-dashed border-slate-600" />
 
                     <span className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-700">
                       TRACK DISTANCE
                     </span>
-
                   </div>
-
                 </div>
 
                 <span className="font-mono text-[7px] font-black uppercase tracking-[0.18em] text-slate-700">
                   HOVER FOR TELEMETRY
                 </span>
-
               </div>
             )}
-
         </section>
 
         {/* =====================================================
@@ -1388,13 +1268,9 @@ export default function Telemetry() {
         ====================================================== */}
 
         <section className="mt-6">
-
           <div className="mb-4 flex items-end justify-between">
-
             <div>
-
               <div className="flex items-center gap-2">
-
                 <Cpu
                   size={13}
                   className="text-orange-300"
@@ -1403,26 +1279,21 @@ export default function Telemetry() {
                 <h2 className="font-mono text-[11px] font-black uppercase tracking-[0.18em] text-slate-100">
                   Engineering Insights
                 </h2>
-
               </div>
 
               <p className="mt-1 font-mono text-[7px] uppercase tracking-[0.16em] text-slate-600">
                 Derived from telemetry samples
               </p>
-
             </div>
 
             <span className="hidden rounded-md border border-slate-800 bg-slate-950 px-3 py-1.5 font-mono text-[7px] font-black uppercase tracking-widest text-slate-600 md:block">
               LIVE ANALYSIS
             </span>
-
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
             {insights.map(
               (item, index) => {
-
                 const Icon = item.icon
                 const tone =
                   toneMap[item.tone]
@@ -1439,19 +1310,16 @@ export default function Telemetry() {
                       y: 0,
                     }}
                     transition={{
-                      delay:
-                        index * 0.05,
+                      delay: index * 0.05,
                     }}
                     whileHover={{
                       y: -4,
                     }}
                     className={`group relative overflow-hidden rounded-xl border ${tone.border} ${tone.bg} p-5 transition duration-300 ${tone.glow}`}
                   >
-
                     <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-full border-b border-l border-white/[0.02]" />
 
                     <div className="flex items-center justify-between">
-
                       <span className="font-mono text-[7px] font-black uppercase tracking-[0.16em] text-slate-600">
                         {item.label}
                       </span>
@@ -1459,14 +1327,11 @@ export default function Telemetry() {
                       <div
                         className={`flex h-7 w-7 items-center justify-center rounded-lg border ${tone.iconBg}`}
                       >
-
                         <Icon
                           size={13}
                           className={`${tone.text} transition group-hover:scale-110`}
                         />
-
                       </div>
-
                     </div>
 
                     <p
@@ -1478,14 +1343,11 @@ export default function Telemetry() {
                     <p className="mt-2 font-mono text-[7px] font-bold uppercase tracking-widest text-slate-600">
                       {item.detail}
                     </p>
-
                   </motion.div>
                 )
-              }
+              },
             )}
-
           </div>
-
         </section>
 
         {/* =====================================================
@@ -1493,11 +1355,9 @@ export default function Telemetry() {
         ====================================================== */}
 
         <section className="mt-6 grid gap-5 lg:grid-cols-2">
-
           {/* Coverage */}
 
-          <div className="rounded-2xl border border-slate-800/90 bg-slate-950/65 p-6 transition hover:border-cyan-400/15">
-
+          <div className="rounded-2xl border border-slate-800/90 bg-slate-950/65 p-5 transition hover:border-cyan-400/15 sm:p-6">
             <SectionHeader
               icon={Timer}
               title="Telemetry Coverage"
@@ -1505,7 +1365,6 @@ export default function Telemetry() {
             />
 
             <div className="mt-7 space-y-6">
-
               {[
                 {
                   label: "THROTTLE",
@@ -1535,28 +1394,23 @@ export default function Telemetry() {
                     "shadow-[0_0_12px_rgba(251,146,60,0.4)]",
                 },
               ].map((item) => (
-
                 <div
                   key={item.label}
                 >
-
                   <div className="mb-2 flex items-center justify-between">
-
                     <span className="font-mono text-[8px] font-black uppercase tracking-widest text-slate-500">
                       {item.label}
                     </span>
 
                     <span className="font-mono text-[9px] font-black text-slate-300">
                       {item.value.toFixed(
-                        1
+                        1,
                       )}
                       %
                     </span>
-
                   </div>
 
                   <div className="relative h-2 overflow-hidden rounded-full bg-slate-900">
-
                     <motion.div
                       initial={{
                         width: 0,
@@ -1566,8 +1420,8 @@ export default function Telemetry() {
                           100,
                           Math.max(
                             0,
-                            item.value
-                          )
+                            item.value,
+                          ),
                         )}%`,
                       }}
                       transition={{
@@ -1576,21 +1430,15 @@ export default function Telemetry() {
                       }}
                       className={`h-full rounded-full ${item.color} ${item.glow}`}
                     />
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           </div>
 
           {/* Snapshot */}
 
-          <div className="rounded-2xl border border-slate-800/90 bg-slate-950/65 p-6 transition hover:border-orange-400/15">
-
+          <div className="rounded-2xl border border-slate-800/90 bg-slate-950/65 p-5 transition hover:border-orange-400/15 sm:p-6">
             <SectionHeader
               icon={Gauge}
               title="Session Snapshot"
@@ -1599,7 +1447,6 @@ export default function Telemetry() {
             />
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-
               {[
                 {
                   label: "DRIVER",
@@ -1628,21 +1475,14 @@ export default function Telemetry() {
                 },
                 {
                   label: "MAX GEAR",
-                  value: data.length
-                    ? Math.max(
-                        ...data.map(
-                          (point) =>
-                            point.Gear
-                        )
-                      )
-                    : "—",
+                  value:
+                    maxGear ?? "—",
                   detail:
                     "HIGHEST RECORDED",
                   color:
                     "text-emerald-300",
                 },
               ].map((item) => (
-
                 <motion.div
                   key={item.label}
                   whileHover={{
@@ -1650,9 +1490,7 @@ export default function Telemetry() {
                   }}
                   className="group rounded-xl border border-slate-800 bg-[#020617] p-4 transition hover:border-slate-700 hover:bg-slate-900/60"
                 >
-
                   <div className="flex items-center justify-between">
-
                     <p className="font-mono text-[7px] font-black uppercase tracking-widest text-slate-600">
                       {item.label}
                     </p>
@@ -1661,7 +1499,6 @@ export default function Telemetry() {
                       size={10}
                       className="text-slate-800 transition group-hover:translate-x-0.5 group-hover:text-slate-600"
                     />
-
                   </div>
 
                   <p
@@ -1673,15 +1510,10 @@ export default function Telemetry() {
                   <p className="mt-1 truncate font-mono text-[7px] uppercase tracking-wider text-slate-600">
                     {item.detail}
                   </p>
-
                 </motion.div>
-
               ))}
-
             </div>
-
           </div>
-
         </section>
 
         {/* =====================================================
@@ -1689,24 +1521,19 @@ export default function Telemetry() {
         ====================================================== */}
 
         <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-slate-800/70 py-5 sm:flex-row">
-
           <div className="flex items-center gap-2">
-
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
 
             <span className="font-mono text-[7px] font-black uppercase tracking-[0.2em] text-slate-700">
               Telemetry stream synchronized
             </span>
-
           </div>
 
           <span className="font-mono text-[7px] font-black uppercase tracking-[0.18em] text-slate-800">
             APX · {year} · {grandPrix} ·{" "}
             {driver}
           </span>
-
         </div>
-
       </main>
     </div>
   )

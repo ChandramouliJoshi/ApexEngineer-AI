@@ -1,63 +1,13 @@
 import { useEffect, useState } from "react"
-import axios from "axios"
 
-export interface EngineerData {
-  telemetry: {
-    speed: {
-      max: number
-      average: number
-      minimum: number
-    }
+import {
+  getEngineerReport,
+} from "../services/api"
 
-    rpm: {
-      max: number
-      average: number
-    }
+import type {
+  EngineerReport,
+} from "../types/api"
 
-    gear: {
-      max: number
-      average: number
-    }
-
-    distance: number
-    full_throttle: number
-    brake_usage: number
-    drs_usage: number
-  }
-
-  sectors: {
-    sector_1: {
-      fastest: number
-      average: number
-    }
-
-    sector_2: {
-      fastest: number
-      average: number
-    }
-
-    sector_3: {
-      fastest: number
-      average: number
-    }
-
-    best_sector_combination: number
-  }
-
-  performance_score: {
-    speed_score: number
-    throttle_score: number
-    braking_score: number
-    consistency_score: number
-    overall_score: number
-  }
-
-  recommendations: {
-    area: string
-    priority: string
-    message: string
-  }[]
-}
 
 interface UseEngineerParams {
   year: number
@@ -67,12 +17,11 @@ interface UseEngineerParams {
 }
 
 interface UseEngineerResult {
-  data: EngineerData | null
+  data: EngineerReport | null
   loading: boolean
   error: string | null
 }
 
-const API_URL = "http://127.0.0.1:8000"
 
 export function useEngineer({
   year,
@@ -80,7 +29,7 @@ export function useEngineer({
   driver,
   sessionType,
 }: UseEngineerParams): UseEngineerResult {
-  const [data, setData] = useState<EngineerData | null>(null)
+  const [data, setData] = useState<EngineerReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -92,29 +41,24 @@ export function useEngineer({
         setLoading(true)
         setError(null)
 
-        const response = await axios.get<EngineerData>(
-          `${API_URL}/analysis/engineer`,
-          {
-            params: {
-              year,
-              grand_prix: grandPrix,
-              driver,
-              session_type: sessionType,
-            },
-          }
+        const report = await getEngineerReport(
+          year,
+          grandPrix,
+          driver,
+          sessionType,
         )
 
         if (cancelled) {
           return
         }
 
-        if (!response.data) {
+        if (!report) {
           throw new Error(
-            "Engineer endpoint returned no data."
+            "Engineer endpoint returned no data.",
           )
         }
 
-        setData(response.data)
+        setData(report)
       } catch (err: unknown) {
         if (cancelled) {
           return
@@ -122,20 +66,14 @@ export function useEngineer({
 
         console.error(
           "Engineer report fetch failed:",
-          err
+          err,
         )
 
-        if (axios.isAxiosError(err)) {
-          setError(
-            err.response?.data?.detail ??
-            err.message ??
-            "Unable to load engineer report."
-          )
-        } else if (err instanceof Error) {
+        if (err instanceof Error) {
           setError(err.message)
         } else {
           setError(
-            "Unable to load engineer report."
+            "Unable to load engineer report.",
           )
         }
 

@@ -32,27 +32,27 @@ interface UseSectorsResult {
 
 const API_URL = "http://127.0.0.1:8000"
 
+function toNumber(value: unknown): number {
+  const parsed = Number(value)
+
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
 export function useSectors({
   year,
   grandPrix,
   driver,
   sessionType,
 }: UseSectorsParams): UseSectorsResult {
-
   const [data, setData] = useState<SectorData | null>(null)
-
   const [loading, setLoading] = useState(true)
-
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-
     let cancelled = false
 
     async function fetchSectors() {
-
       try {
-
         setLoading(true)
         setError(null)
 
@@ -68,90 +68,126 @@ export function useSectors({
           }
         )
 
-        if (cancelled) {
-          return
-        }
+        if (cancelled) return
 
         const payload = response.data
 
+        /*
+         * Accept the normal backend response:
+         *
+         * {
+         *   sector_1: {
+         *     fastest: 20.123,
+         *     average: 20.456
+         *   },
+         *   sector_2: {
+         *     fastest: 30.123,
+         *     average: 30.456
+         *   },
+         *   sector_3: {
+         *     fastest: 25.123,
+         *     average: 25.456
+         *   },
+         *   best_sector_combination: 75.789
+         * }
+         *
+         * Also tolerate camelCase keys if the
+         * frontend receives them from another serializer.
+         */
+
+        if (!payload || typeof payload !== "object") {
+          throw new Error(
+            "Sector analysis returned an invalid response."
+          )
+        }
+
+        const sector1 = payload.sector_1 ?? payload.sector1 ?? {}
+        const sector2 = payload.sector_2 ?? payload.sector2 ?? {}
+        const sector3 = payload.sector_3 ?? payload.sector3 ?? {}
+
         const normalised: SectorData = {
           sector1: {
-            fastest: Number(
-              payload?.sector_1?.fastest ?? 0
-            ),
-            average: Number(
-              payload?.sector_1?.average ?? 0
-            ),
+            fastest: toNumber(sector1.fastest),
+            average: toNumber(sector1.average),
           },
 
           sector2: {
-            fastest: Number(
-              payload?.sector_2?.fastest ?? 0
-            ),
-            average: Number(
-              payload?.sector_2?.average ?? 0
-            ),
+            fastest: toNumber(sector2.fastest),
+            average: toNumber(sector2.average),
           },
 
           sector3: {
-            fastest: Number(
-              payload?.sector_3?.fastest ?? 0
-            ),
-            average: Number(
-              payload?.sector_3?.average ?? 0
-            ),
+            fastest: toNumber(sector3.fastest),
+            average: toNumber(sector3.average),
           },
 
-          bestSectorCombination: Number(
-            payload?.best_sector_combination ?? 0
+          bestSectorCombination: toNumber(
+            payload.best_sector_combination ??
+              payload.bestSectorCombination
           ),
         }
 
-        if (
-          !Number.isFinite(normalised.sector1.fastest) ||
-          !Number.isFinite(normalised.sector1.average) ||
-          !Number.isFinite(normalised.sector2.fastest) ||
-          !Number.isFinite(normalised.sector2.average) ||
-          !Number.isFinite(normalised.sector3.fastest) ||
-          !Number.isFinite(normalised.sector3.average) ||
-          !Number.isFinite(
-            normalised.bestSectorCombination
-          )
-        ) {
+        /*
+         * Make sure we actually received useful data.
+         */
+
+        const hasUsefulData =
+          normalised.sector1.fastest > 0 ||
+          normalised.sector1.average > 0 ||
+          normalised.sector2.fastest > 0 ||
+          normalised.sector2.average > 0 ||
+          normalised.sector3.fastest > 0 ||
+          normalised.sector3.average > 0 ||
+          normalised.bestSectorCombination > 0
+
+        if (!hasUsefulData) {
           throw new Error(
-            "Sector analysis returned invalid data."
+            "Sector analysis returned no usable sector data."
           )
         }
 
-        setData(normalised)
-
-      }
-      catch (err: any) {
-
-        if (cancelled) {
-          return
+        if (!cancelled) {
+          setData(normalised)
         }
+      } catch (err: unknown) {
+        if (cancelled) return
 
         console.error(
           "Sector analysis fetch failed:",
           err
         )
 
-        setError(
-          err?.response?.data?.detail ??
-          err?.message ??
-          "Unable to load sector analysis."
-        )
+        if (axios.isAxiosError(err)) {
+          const detail = err.response?.data?.detail
 
-      }
-      finally {
+          if (typeof detail === "string") {
+            setError(detail)
+          } else if (
+            detail &&
+            typeof detail === "object" &&
+            typeof detail.message === "string"
+          ) {
+            setError(detail.message)
+          } else {
+            setError(
+              err.message ||
+                "Unable to load sector analysis."
+            )
+          }
+        } else if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError(
+            "Unable to load sector analysis."
+          )
+        }
 
+        setData(null)
+      } finally {
         if (!cancelled) {
           setLoading(false)
         }
-
       }
-
     }
 
     fetchSectors()
@@ -159,7 +195,6 @@ export function useSectors({
     return () => {
       cancelled = true
     }
-
   }, [
     year,
     grandPrix,
