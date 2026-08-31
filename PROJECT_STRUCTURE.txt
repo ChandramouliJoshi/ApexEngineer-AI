@@ -1,66 +1,212 @@
-ApexEngineer-AI/
-├── docker-compose.yml
-├── pyproject.toml
-├── README.md
-├── requirements.txt
-├── backend/
-│   └── app/
-│       ├── __init__.py
-│       ├── main.py
-│       ├── test_car_data.py
-│       ├── test_session.py
-│       ├── test_telemetry.py
-│       ├── analytics/
-│       │   ├── __init__.py
-│       │   ├── corners.py
-│       │   ├── delta.py
-│       │   ├── sectors.py
-│       │   ├── telemetry_analysis.py
-│       │   ├── tyres.py
-│       │   └── weather.py
-│       ├── api/
-│       │   ├── __init__.py
-│       │   ├── analysis.py
-│       │   ├── drivers.py
-│       │   ├── laps.py
-│       │   ├── sessions.py
-│       │   └── telemetry.py
-│       ├── core/
-│       │   ├── __init__.py
-│       │   ├── cache.py
-│       │   ├── config.py
-│       │   ├── constants.py
-│       │   └── logging.py
-│       ├── database/
-│       │   ├── __init__.py
-│       │   ├── database.py
-│       │   ├── models.py
-│       │   └── schemas.py
-│       ├── ml/
-│       │   ├── __init__.py
-│       │   ├── driver_scoring.py
-│       │   ├── recommendation.py
-│       │   └── models/
-│       ├── services/
-│       │   ├── __init__.py
-│       │   ├── ai_engineer.py
-│       │   ├── comparision_service.py
-│       │   ├── fastf1_service.py
-│       │   ├── lap_service.py
-│       │   ├── session_service.py
-│       │   └── telemetry_service.py
-│       └── utils/
-│           ├── calculations.py
-│           ├── helpers.py
-│           └── validators.py
-├── cache/
-│   └── 2025/
-│       └── 2025-05-25_Monaco_Grand_Prix/
-└── data/
+ApexEngineer-AI Project Structure (Updated 2026-08-31)
+=====================================================
 
-Additional environment folders:
-├── f1ven/
-│   ├── pyvenv.cfg
-│   ├── Include/
-│   ├── Lib/
-│   └── Scripts/
+ROOT DIRECTORY
+==============
+ApexEngineer-AI/
+├── .git/                          # Version control
+├── .gitignore                      # Git ignore rules
+├── .pytest_cache/                  # Pytest cache
+├── backend/                        # Backend services (Python/FastAPI)
+├── frontend/                       # Frontend application (React/TypeScript)
+├── f1ven/                          # Python virtual environment
+├── docker-compose.yml              # Docker configuration
+├── pyproject.toml                  # Python project config
+├── README.md                       # Project documentation
+├── requirements.txt                # Python dependencies
+└── FILE_STRUCTURE.md               # Detailed project structure
+
+
+BACKEND STRUCTURE (/backend)
+============================
+backend/
+├── app/                            # Main application
+│   ├── __init__.py
+│   ├── main.py                     # FastAPI entry point
+│   ├── analytics/                  # Analysis modules
+│   │   ├── base_analysis.py
+│   │   ├── comparison_analysis.py
+│   │   ├── corner_analysis.py
+│   │   ├── corner_comparison.py
+│   │   ├── delta_analysis.py
+│   │   ├── sector_analysis.py
+│   │   ├── sector_comparison.py
+│   │   ├── telemetry_analysis.py
+│   │   ├── tyre_analysis.py
+│   │   └── weather_analysis.py
+│   ├── api/                        # API endpoints
+│   │   ├── analysis.py
+│   │   ├── drivers.py
+│   │   ├── laps.py
+│   │   ├── sessions.py
+│   │   └── telemetry.py
+│   ├── core/                       # Core utilities
+│   │   ├── cache.py
+│   │   ├── config.py
+│   │   ├── constants.py
+│   │   └── logging.py
+│   ├── database/                   # Database layer
+│   │   ├── database.py
+│   │   ├── models.py
+│   │   └── schemas.py
+│   ├── ml/                         # Machine learning
+│   │   ├── driver_scoring.py
+│   │   ├── recommendation.py
+│   │   └── models/
+│   ├── services/                   # Business logic
+│   │   ├── ai_engineer.py
+│   │   ├── comparison_service.py
+│   │   ├── fastf1_service.py
+│   │   ├── lap_service.py
+│   │   ├── session_service.py
+│   │   └── telemetry_service.py
+│   ├── utils/                      # Utilities
+│   │   ├── calculations.py
+│   │   ├── helpers.py
+│   │   └── validators.py
+│   ├── visualization/              # Plotting & visualization
+│   │   ├── delta_plot.py
+│   │   └── telemetry_plot.py
+│   └── __pycache__/                # Python cache
+├── cache/                          # F1 data cache (by year/race)
+│   ├── 2023/
+│   ├── 2024/
+│   └── 2025/
+├── data/                           # Data files/datasets
+├── output/                         # Output files (reports, exports)
+└── tests/                          # Test suite
+    ├── test_analysis.py
+    ├── test_car_data.py
+    ├── test_comparison.py
+    ├── test_corner_analysis.py
+    ├── test_corner_comparison.py
+    ├── test_corners.py
+    ├── test_delta_plot.py
+    ├── test_delta.py
+    ├── test_driver_scoring.py
+    ├── test_lap_service.py
+    ├── test_plot.py
+    ├── test_recommendation.py
+    ├── test_session.py
+    ├── test_telemetry.py
+    └── test_utils.py
+
+
+FRONTEND STRUCTURE (/frontend)
+==============================
+frontend/
+├── .env                            # Environment variables
+├── .gitignore                      # Git ignore rules
+├── dist/                           # Build output (generated)
+├── node_modules/                   # NPM packages (generated)
+├── public/                         # Static assets
+│   ├── favicon.svg
+│   └── icons.svg
+├── src/                            # Source code
+│   ├── App.css
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── assets/                     # Images & media
+│   │   ├── hero.png
+│   │   ├── react.svg
+│   │   └── vite.svg
+│   ├── components/                 # React components
+│   │   ├── charts/                 # Chart components
+│   │   ├── dashboard/              # Dashboard components
+│   │   ├── f1/                     # F1-specific components
+│   │   │   ├── RacingPanel.tsx
+│   │   │   ├── SectionHeader.tsx
+│   │   │   ├── StatusLight.tsx
+│   │   │   └── TelemetryBar.tsx
+│   │   └── layout/                 # Layout components
+│   │       ├── AppLayout.tsx
+│   │       ├── Sidebar.tsx
+│   │       └── Topbar.tsx
+│   ├── hooks/                      # Custom React hooks
+│   │   ├── useCornerComparison.ts
+│   │   ├── useCorners.ts
+│   │   ├── useDelta.ts
+│   │   ├── useDriverComparison.ts
+│   │   ├── useDrivers.ts
+│   │   ├── useEngineer.ts
+│   │   ├── useEngineerComparison.ts
+│   │   ├── useEngineerReport.ts
+│   │   ├── useLaps.ts
+│   │   ├── useSectorComparison.ts
+│   │   └── useSectors.ts
+│   ├── pages/                      # Page components
+│   ├── services/                   # API services
+│   └── types/                      # TypeScript types
+├── eslint.config.js                # ESLint config
+├── index.html                      # HTML entry point
+├── package.json                    # NPM dependencies
+├── package-lock.json               # Dependency lock file
+├── README.md                       # Frontend docs
+├── tsconfig.json                   # TypeScript config
+├── tsconfig.app.json               # TypeScript app config
+├── tsconfig.node.json              # TypeScript node config
+└── vite.config.ts                  # Vite build config
+
+
+PYTHON VIRTUAL ENVIRONMENT (/f1ven)
+===================================
+f1ven/                             # Python virtual environment
+├── pyvenv.cfg                      # Configuration
+├── Include/                        # C headers
+├── Lib/
+│   ├── site-packages/             # Third-party packages
+│   └── (Standard library)
+├── Scripts/                        # Executables
+│   ├── activate                   # Unix activation
+│   ├── activate.bat               # Windows activation
+│   ├── activate.fish              # Fish shell activation
+│   ├── Activate.ps1               # PowerShell activation
+│   └── deactivate.bat             # Deactivation
+└── share/
+    ├── jupyter/                   # Jupyter files
+    └── man/                       # Manual pages
+
+
+KEY CONFIGURATION FILES
+=======================
+docker-compose.yml   - Docker container orchestration
+pyproject.toml       - Python project metadata
+requirements.txt     - Python package dependencies
+package.json         - Node.js/npm dependencies
+tsconfig.json        - TypeScript configuration
+vite.config.ts       - Vite build configuration
+eslint.config.js     - ESLint rules
+
+
+TECHNOLOGY STACK
+================
+Backend:
+  - FastAPI (Python framework)
+  - SQLAlchemy (ORM)
+  - FastF1 (F1 data API)
+  - Pytest (Testing)
+
+Frontend:
+  - React 18+ with TypeScript
+  - Vite (Build tool)
+  - CSS3 (Styling)
+  - ESLint (Linting)
+
+Infrastructure:
+  - Docker & Docker Compose
+  - Python virtual environment
+  - NPM for package management
+
+
+PROJECT DESCRIPTION
+===================
+ApexEngineer-AI is a Formula 1 analysis and telemetry dashboard application that:
+- Analyzes F1 race data and telemetry
+- Provides driver and engineer comparisons
+- Offers sector and corner analysis
+- Includes AI-driven scoring and recommendations
+- Features interactive visualizations
+- Caches F1 data locally for performance
+
+Updated: 2026-08-31
