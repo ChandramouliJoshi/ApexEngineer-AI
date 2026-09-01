@@ -1,0 +1,15 @@
+
+/* ApexEngineer custom F1 cursor */
+.ae-custom-cursor,
+.ae-custom-cursor body,
+.ae-custom-cursor * {
+  cursor: var(--ae-cursor) !important;
+}
+
+@media (pointer: coarse) {
+  .ae-custom-cursor,
+  .ae-custom-cursor body,
+  .ae-custom-cursor * {
+    cursor: auto !important;
+  }
+}

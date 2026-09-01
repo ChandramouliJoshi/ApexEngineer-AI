@@ -4,6 +4,7 @@ import { Outlet, useLocation } from "react-router-dom"
 
 import Sidebar from "./Sidebar"
 import Topbar from "./Topbar"
+import CustomCursor from "./CustomCursor"
 
 
 function AppLayout() {
@@ -12,6 +13,8 @@ function AppLayout() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+
+      <CustomCursor />
 
       <div className="pointer-events-none fixed inset-0 opacity-70">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(225,6,0,0.12),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(0,184,255,0.10),transparent_30%)]" />

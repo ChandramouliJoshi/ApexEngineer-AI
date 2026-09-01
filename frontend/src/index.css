@@ -372,3 +372,88 @@ input:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
   background: #e10600;
 }
+
+/* ============================================================
+   APEXENGINEER — CUSTOM F1 CURSOR
+   ============================================================ */
+
+.custom-cursor {
+  position: fixed;
+  z-index: 99999;
+
+  width: 64px;
+  height: 64px;
+
+  object-fit: contain;
+
+  pointer-events: none;
+  user-select: none;
+
+  transform: translate(-12px, -12px);
+
+  transition:
+    width 100ms ease,
+    height 100ms ease,
+    transform 100ms ease,
+    opacity 120ms ease;
+
+  will-change: left, top, transform;
+}
+
+
+/*
+ * Hide the browser cursor while the custom
+ * F1 cursor is active.
+ */
+
+html,
+body,
+#root {
+  cursor: none;
+}
+
+a,
+button,
+input,
+select,
+textarea,
+[role="button"],
+.cursor-pointer {
+  cursor: none !important;
+}
+
+
+/*
+ * Keep the normal browser cursor available
+ * on touch devices.
+ */
+
+@media (pointer: coarse) {
+  html,
+  body,
+  #root,
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  .cursor-pointer {
+    cursor: auto !important;
+  }
+
+  .custom-cursor {
+    display: none;
+  }
+}
+
+
+/*
+ * Respect reduced-motion preferences.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor {
+    transition: none;
+  }
+}
